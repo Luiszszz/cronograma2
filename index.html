@@ -3,507 +3,747 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VestibControl - Painel de Estudos</title>
+    <title>Cronograma Minimalista Premium</title>
     
-    <!-- Tailwind CSS (Estilização) -->
+    <!-- Tailwind CSS (Design) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & ReactDOM (Core do React) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Lucide Icons (Ícones) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Babel (Para entender JSX no navegador) -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Fonte Nunito -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Fontes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Configuração do Tailwind -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+
+        /* Animações e Transições */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        .slide-up { animation: slideUp 0.3s ease-out; }
+        .slide-right { animation: slideRight 0.4s ease-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideRight { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        nunito: ['Nunito', 'sans-serif'],
+                    colors: {
+                        stone: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1', 400: '#a8a29e', 500: '#78716c', 600: '#57534e', 700: '#44403c', 800: '#292524', 900: '#1c1917' }
                     }
                 }
             }
         }
     </script>
-
-    <style>
-        body { font-family: 'Nunito', sans-serif; }
-        
-        /* Scrollbar personalizada */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-        
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
 </head>
-<body class="bg-[#f4f7fa] text-slate-700 selection:bg-indigo-200 selection:text-indigo-900 pb-32">
+<body class="min-h-screen bg-[#FDFBF9] text-stone-700 flex items-center justify-center p-4 selection:bg-indigo-100 selection:text-indigo-800">
 
-    <!-- Container onde o React vai renderizar o App -->
-    <div id="root"></div>
-
-    <!-- Lógica da Aplicação -->
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        // --- ÍCONES (SVG Inline para não depender de bibliotecas externas) ---
-        const Icon = ({ children, size = 24, className = "", ...props }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-                {children}
-            </svg>
-        );
-
-        const Plus = (props) => <Icon {...props}><path d="M5 12h14"/><path d="M12 5v14"/></Icon>;
-        const Trash2 = (props) => <Icon {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></Icon>;
-        const CheckCircle = (props) => <Icon {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Icon>;
-        const AlertCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></Icon>;
-        const RefreshCw = (props) => <Icon {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></Icon>;
-        const Search = (props) => <Icon {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></Icon>;
-        const GraduationCap = (props) => <Icon {...props}><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></Icon>;
-        const X = (props) => <Icon {...props}><path d="M18 6 6 18"/><path d="m6 6 18 18"/></Icon>;
-        const Flame = (props) => <Icon {...props}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.5-3.3a9 9 0 0 1 3 3.8 2.5 2.5 0 0 0 0 1.25z"/></Icon>;
-        const LinkIcon = (props) => <Icon {...props}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></Icon>;
-        const TrendingUp = (props) => <Icon {...props}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></Icon>;
-        const BookOpen = (props) => <Icon {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></Icon>;
-        const Sparkles = (props) => <Icon {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></Icon>;
-        const PieChart = (props) => <Icon {...props}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></Icon>;
-
-        // --- DADOS ---
-        const QUOTES = [
-            "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
-            "A disciplina é a ponte entre metas e realizações.",
-            "Não pare até se orgulhar.",
-            "O único lugar onde o sucesso vem antes do trabalho é no dicionário.",
-            "Seus erros são seus melhores professores agora.",
-            "Foco no processo, o resultado é consequência."
-        ];
-
-        const SUBJECTS = [
-            { id: 'mat', label: 'Matemática', color: 'bg-blue-100 text-blue-700 border-blue-200', gradient: 'from-blue-400 to-cyan-400', shadow: 'shadow-blue-200' },
-            { id: 'fis', label: 'Física', color: 'bg-indigo-100 text-indigo-700 border-indigo-200', gradient: 'from-indigo-400 to-purple-400', shadow: 'shadow-indigo-200' },
-            { id: 'qui', label: 'Química', color: 'bg-violet-100 text-violet-700 border-violet-200', gradient: 'from-violet-400 to-fuchsia-400', shadow: 'shadow-violet-200' },
-            { id: 'bio', label: 'Biologia', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', gradient: 'from-emerald-400 to-teal-400', shadow: 'shadow-emerald-200' },
-            { id: 'his', label: 'História', color: 'bg-amber-100 text-amber-700 border-amber-200', gradient: 'from-amber-400 to-orange-400', shadow: 'shadow-amber-200' },
-            { id: 'geo', label: 'Geografia', color: 'bg-orange-100 text-orange-700 border-orange-200', gradient: 'from-orange-400 to-red-400', shadow: 'shadow-orange-200' },
-            { id: 'fil', label: 'Filosofia', color: 'bg-pink-100 text-pink-700 border-pink-200', gradient: 'from-pink-400 to-rose-400', shadow: 'shadow-pink-200' },
-            { id: 'por', label: 'Português', color: 'bg-rose-100 text-rose-700 border-rose-200', gradient: 'from-rose-400 to-red-400', shadow: 'shadow-rose-200' },
-            { id: 'lit', label: 'Literatura', color: 'bg-red-100 text-red-700 border-red-200', gradient: 'from-red-400 to-orange-400', shadow: 'shadow-red-200' },
-            { id: 'ing', label: 'Inglês/Esp.', color: 'bg-teal-100 text-teal-700 border-teal-200', gradient: 'from-teal-400 to-emerald-400', shadow: 'shadow-teal-200' },
-        ];
-
-        const STATUSES = {
-            pending: { label: 'Revisar', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-100', icon: AlertCircle, action: 'Iniciar Revisão', btnColor: 'bg-rose-500 hover:bg-rose-600' },
-            review: { label: 'Praticando', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100', icon: RefreshCw, action: 'Dominar Conteúdo', btnColor: 'bg-amber-500 hover:bg-amber-600' },
-            mastered: { label: 'Dominado', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100', icon: CheckCircle, action: 'Revisar Novamente', btnColor: 'bg-emerald-500 hover:bg-emerald-600' },
-        };
-
-        // --- COMPONENTE PRINCIPAL ---
-        function VestibControl() {
-            const [items, setItems] = useState([]);
-            const [filterSubject, setFilterSubject] = useState('all');
-            const [searchTerm, setSearchTerm] = useState('');
-            const [quote, setQuote] = useState(QUOTES[0]);
-            const [isFormOpen, setIsFormOpen] = useState(false);
-            const [stats, setStats] = useState({ total: 0, mastered: 0, pending: 0, review: 0 });
+    <!-- App Container -->
+    <div class="max-w-6xl w-full bg-[#FCFCFC] rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col md:flex-row min-h-[800px] border border-stone-100 relative">
+        
+        <!-- ESQUERDA: CALENDÁRIO & PERFIL -->
+        <div class="w-full md:w-[380px] bg-[#FAFAFA] p-8 border-r border-stone-100 flex flex-col z-10 relative">
             
-            const [newItem, setNewItem] = useState({ 
-                subject: 'mat', topic: '', desc: '', link: '', priority: false 
-            });
-
-            // Carregar dados
-            useEffect(() => {
-                try {
-                    const saved = localStorage.getItem('vestib-data-html');
-                    if (saved) setItems(JSON.parse(saved));
-                } catch (e) {
-                    console.error("Erro ao carregar", e);
-                }
-                setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-            }, []);
-
-            // Salvar dados
-            useEffect(() => {
-                localStorage.setItem('vestib-data-html', JSON.stringify(items));
-                updateStats();
-            }, [items]);
-
-            const updateStats = () => {
-                setStats({
-                    total: items.length,
-                    mastered: items.filter(i => i.status === 'mastered').length,
-                    pending: items.filter(i => i.status === 'pending').length,
-                    review: items.filter(i => i.status === 'review').length,
-                });
-            };
-
-            const handleAddItem = (e) => {
-                e.preventDefault();
-                if (!newItem.topic.trim()) return;
-
-                const item = {
-                    id: Date.now(),
-                    ...newItem,
-                    status: 'pending',
-                    date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-                };
-
-                setItems([item, ...items]);
-                setNewItem({ subject: 'mat', topic: '', desc: '', link: '', priority: false });
-                setIsFormOpen(false);
-            };
-
-            const handleDelete = (id) => {
-                if (window.confirm('Remover este item?')) {
-                    setItems(items.filter(item => item.id !== id));
-                }
-            };
-
-            const handlePromoteStatus = (id, currentStatus) => {
-                const cycle = { pending: 'review', review: 'mastered', mastered: 'pending' };
-                setItems(items.map(item => 
-                    item.id === id ? { ...item, status: cycle[currentStatus] } : item
-                ));
-            };
-
-            const filteredItems = items.filter(item => {
-                const matchSubject = filterSubject === 'all' || item.subject === filterSubject;
-                const matchSearch = item.topic.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                    item.desc.toLowerCase().includes(searchTerm.toLowerCase());
-                return matchSubject && matchSearch;
-            });
-
-            filteredItems.sort((a, b) => {
-                if (a.priority === b.priority) return b.id - a.id;
-                return a.priority ? -1 : 1;
-            });
-
-            const getSubject = (id) => SUBJECTS.find(s => s.id === id) || SUBJECTS[0];
-            const progressPercentage = stats.total === 0 ? 0 : Math.round((stats.mastered / stats.total) * 100);
-
-            return (
-                <div className="font-nunito">
-                    {/* BACKGROUND ORBS */}
-                    <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                        <div className="absolute top-[-10%] right-[10%] w-[500px] h-[500px] bg-indigo-200/30 rounded-full blur-[100px]"></div>
-                        <div className="absolute top-[20%] left-[-10%] w-[400px] h-[400px] bg-pink-200/30 rounded-full blur-[100px]"></div>
-                        <div className="absolute bottom-[-10%] right-[20%] w-[600px] h-[600px] bg-blue-100/40 rounded-full blur-[100px]"></div>
+            <!-- Perfil do Usuário (Novo) -->
+            <div class="mb-8 pb-6 border-b border-stone-100 slide-right">
+                <div class="flex items-center gap-4 mb-2">
+                    <div class="w-12 h-12 rounded-2xl bg-white border border-stone-100 flex items-center justify-center shadow-sm text-stone-300">
+                        <i data-lucide="user" width="20"></i>
                     </div>
-
-                    {/* HEADER */}
-                    <header className="relative z-10 pt-10 pb-6 px-6 max-w-[1200px] mx-auto">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div className="flex items-center gap-5">
-                                <div className="w-14 h-14 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-[20px] flex items-center justify-center shadow-lg shadow-indigo-200 transform rotate-[-6deg] hover:rotate-0 transition-transform duration-300">
-                                    <GraduationCap size={28} />
-                                </div>
-                                <div>
-                                    <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight leading-none">Vestib<span className="text-indigo-500">Control</span></h1>
-                                    <p className="text-sm text-slate-500 font-bold mt-1">Seu painel de aprovação</p>
-                                </div>
-                            </div>
-                            
-                            <div className="hidden md:flex items-center gap-3 bg-white/70 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm">
-                                <Sparkles size={16} className="text-amber-400" fill="currentColor" />
-                                <p className="text-sm font-bold text-slate-600">"{quote}"</p>
-                            </div>
-                        </div>
-                    </header>
-
-                    {/* DASHBOARD STATUS */}
-                    <section className="relative z-10 px-6 max-w-[1200px] mx-auto mb-10">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                            {/* Card Principal */}
-                            <div className="md:col-span-1 bg-white rounded-[32px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(99,102,241,0.1)] transition-shadow">
-                                <div className="relative z-10">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
-                                            <PieChart size={24} />
-                                        </div>
-                                        <span className="bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1 rounded-full">Geral</span>
-                                    </div>
-                                    
-                                    <div className="flex items-baseline gap-1 mb-2">
-                                        <span className="text-5xl font-extrabold text-slate-800">{progressPercentage}</span>
-                                        <span className="text-xl font-bold text-slate-400">%</span>
-                                    </div>
-                                    <p className="text-sm text-slate-400 font-bold">Conteúdo Dominado</p>
-                                    
-                                    <div className="w-full bg-slate-100 h-3 rounded-full mt-6 overflow-hidden p-[2px]">
-                                        <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-1000 ease-out shadow-sm" style={{ width: `${progressPercentage}%` }}></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Mini Stats */}
-                            <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-5">
-                                {[
-                                    { label: 'Para Revisar', val: stats.pending, color: 'text-rose-500', bg: 'bg-rose-50', icon: AlertCircle },
-                                    { label: 'Em Prática', val: stats.review, color: 'text-amber-500', bg: 'bg-amber-50', icon: RefreshCw },
-                                    { label: 'Dominados', val: stats.mastered, color: 'text-emerald-500', bg: 'bg-emerald-50', icon: CheckCircle },
-                                ].map((stat, idx) => (
-                                    <div key={idx} className="bg-white rounded-[32px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between hover:-translate-y-1 transition-transform duration-300">
-                                        <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center mb-4`}>
-                                            <stat.icon size={24} />
-                                        </div>
-                                        <div>
-                                            <span className={`text-4xl font-extrabold ${stat.color}`}>{stat.val}</span>
-                                            <p className="text-sm text-slate-400 font-bold mt-1">{stat.label}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* FERRAMENTAS */}
-                    <section className="relative z-10 px-6 max-w-[1200px] mx-auto">
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 mb-8">
-                            
-                            <div className="relative w-full lg:w-[420px] group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Search className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                                </div>
-                                <input
-                                    type="text"
-                                    className="block w-full pl-12 pr-4 py-4 border-none rounded-[20px] bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all shadow-sm font-semibold"
-                                    placeholder="Pesquisar por matéria, assunto..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-
-                            <button
-                                onClick={() => setIsFormOpen(true)}
-                                className="w-full lg:w-auto flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white pl-6 pr-8 py-4 rounded-[20px] font-bold shadow-lg shadow-slate-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    <div class="flex-1">
+                        <input id="user-name-input" type="text" placeholder="Seu Nome" 
+                            onchange="app.saveUserProfile()"
+                            class="w-full bg-transparent border-none p-0 text-lg font-bold text-stone-800 placeholder-stone-300 focus:ring-0 focus:outline-none transition-colors hover:placeholder-stone-400"
+                        >
+                        <div class="flex items-center gap-1.5 text-xs text-stone-400">
+                            <i data-lucide="graduation-cap" width="12"></i>
+                            <input id="user-course-input" type="text" placeholder="Curso dos Sonhos..." 
+                                onchange="app.saveUserProfile()"
+                                class="w-full bg-transparent border-none p-0 text-xs font-medium text-stone-500 placeholder-stone-300 focus:ring-0 focus:outline-none"
                             >
-                                <div className="bg-white/20 p-1 rounded-full">
-                                    <Plus size={18} strokeWidth={3} />
-                                </div>
-                                <span>Adicionar Erro</span>
-                            </button>
                         </div>
-
-                        {/* Filtros Pills */}
-                        <div className="flex gap-3 overflow-x-auto pb-6 mb-2 no-scrollbar px-1">
-                            <button
-                                onClick={() => setFilterSubject('all')}
-                                className={`flex-shrink-0 px-6 py-3 rounded-2xl text-sm font-bold transition-all ${filterSubject === 'all' ? 'bg-slate-800 text-white shadow-lg shadow-slate-300' : 'bg-white text-slate-500 hover:bg-slate-100'}`}
-                            >
-                                Tudo
-                            </button>
-                            {SUBJECTS.map(subj => (
-                                <button
-                                    key={subj.id}
-                                    onClick={() => setFilterSubject(subj.id)}
-                                    className={`flex-shrink-0 px-6 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${filterSubject === subj.id ? `bg-gradient-to-r ${subj.gradient} text-white shadow-lg ${subj.shadow}` : 'bg-white text-slate-500 hover:bg-slate-100'}`}
-                                >
-                                    {subj.label}
-                                </button>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* GRID CARDS */}
-                    <main className="relative z-10 px-6 max-w-[1200px] mx-auto">
-                        {filteredItems.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-24 text-center">
-                                <div className="bg-white p-8 rounded-[40px] shadow-sm mb-6 rotate-3">
-                                    <BookOpen size={48} className="text-indigo-300" />
-                                </div>
-                                <h3 className="text-xl font-extrabold text-slate-700 mb-2">Nada por aqui!</h3>
-                                <p className="text-slate-400 font-medium">Selecione outra matéria ou adicione um novo registro.</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredItems.map(item => {
-                                    const statusConfig = STATUSES[item.status];
-                                    const StatusIcon = statusConfig.icon;
-                                    const subjectData = getSubject(item.subject);
-
-                                    return (
-                                        <div 
-                                            key={item.id} 
-                                            className={`group bg-white rounded-[32px] p-7 shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_10px_40px_rgb(0,0,0,0.08)] transition-all duration-300 flex flex-col justify-between border border-transparent hover:border-slate-100 ${item.status === 'mastered' ? 'opacity-80' : ''}`}
-                                        >
-                                            <div>
-                                                <div className="flex justify-between items-start mb-5">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`text-[11px] font-extrabold uppercase tracking-wide px-3 py-1.5 rounded-xl ${subjectData.color}`}>
-                                                            {subjectData.label}
-                                                        </span>
-                                                        {item.priority && (
-                                                            <div className="flex items-center gap-1 text-[11px] font-extrabold text-white bg-orange-400 px-3 py-1.5 rounded-xl shadow-sm shadow-orange-200">
-                                                                <Flame size={12} fill="currentColor" /> Prioridade
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    
-                                                    <button 
-                                                        onClick={() => handleDelete(item.id)}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-colors"
-                                                    >
-                                                        <X size={16} />
-                                                    </button>
-                                                </div>
-
-                                                <h3 className="font-extrabold text-slate-800 text-xl leading-snug mb-3 group-hover:text-indigo-600 transition-colors">
-                                                    {item.topic}
-                                                </h3>
-                                                
-                                                {item.desc && (
-                                                    <p className="text-sm text-slate-500 font-medium leading-relaxed mb-4 bg-slate-50/50 p-3 rounded-2xl">
-                                                        {item.desc}
-                                                    </p>
-                                                )}
-
-                                                {item.link && (
-                                                    <a 
-                                                        href={item.link} 
-                                                        target="_blank" 
-                                                        rel="noreferrer"
-                                                        className="inline-flex items-center gap-2 text-xs font-bold text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 px-3 py-2 rounded-xl transition-all mb-4"
-                                                    >
-                                                        <LinkIcon size={14} /> Material de Apoio
-                                                    </a>
-                                                )}
-                                            </div>
-
-                                            <div className="pt-2 mt-auto">
-                                                <div className="flex items-center justify-between gap-3 text-xs font-bold text-slate-400 mb-4 pl-1">
-                                                    <span className="flex items-center gap-1.5"><TrendingUp size={14}/> {statusConfig.label}</span>
-                                                    <span>{item.date}</span>
-                                                </div>
-
-                                                <button 
-                                                    onClick={() => handlePromoteStatus(item.id, item.status)}
-                                                    className={`w-full flex items-center justify-center gap-2 text-sm font-bold py-4 px-4 rounded-2xl transition-all text-white shadow-md hover:shadow-lg active:scale-95 ${statusConfig.btnColor}`}
-                                                >
-                                                    <StatusIcon size={18} />
-                                                    {statusConfig.action}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </main>
-
-                    {/* MODAL */}
-                    {isFormOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm animate-in fade-in duration-300">
-                            <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 p-2">
-                                
-                                <div className="px-8 pt-8 pb-4 flex justify-between items-center">
-                                    <div>
-                                        <h2 className="text-2xl font-extrabold text-slate-800">Novo Registro</h2>
-                                        <p className="text-sm font-medium text-slate-400">O que vamos aprender hoje?</p>
-                                    </div>
-                                    <button onClick={() => setIsFormOpen(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-200 transition-all">
-                                        <X size={20} />
-                                    </button>
-                                </div>
-
-                                <form onSubmit={handleAddItem} className="p-8 space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-wide mb-3 ml-2">Matéria</label>
-                                            <div className="relative">
-                                                <select 
-                                                    value={newItem.subject}
-                                                    onChange={(e) => setNewItem({...newItem, subject: e.target.value})}
-                                                    className="w-full bg-slate-50 border-none text-slate-700 text-sm font-bold rounded-2xl focus:ring-4 focus:ring-indigo-100 block p-4 outline-none appearance-none cursor-pointer"
-                                                >
-                                                    {SUBJECTS.map(subj => (
-                                                        <option key={subj.id} value={subj.id}>{subj.label}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="flex items-end">
-                                            <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl w-full cursor-pointer hover:bg-slate-100 transition-colors select-none">
-                                                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${newItem.priority ? 'bg-orange-500 border-orange-500' : 'border-slate-300 bg-white'}`}>
-                                                    {newItem.priority && <CheckCircle size={14} className="text-white" />}
-                                                </div>
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={newItem.priority}
-                                                    onChange={(e) => setNewItem({...newItem, priority: e.target.checked})}
-                                                    className="hidden" 
-                                                />
-                                                <span className="text-sm font-bold text-slate-600 flex items-center gap-2">
-                                                    <Flame size={16} className={newItem.priority ? "text-orange-500" : "text-slate-300"} /> 
-                                                    Alta Prioridade
-                                                </span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-wide mb-3 ml-2">O que você errou?</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="Ex: Geometria Analítica - Questão 136" 
-                                            value={newItem.topic}
-                                            onChange={(e) => setNewItem({...newItem, topic: e.target.value})}
-                                            className="w-full bg-slate-50 border-none text-slate-800 text-lg font-bold rounded-2xl focus:ring-4 focus:ring-indigo-100 block p-4 outline-none placeholder:text-slate-300"
-                                            autoFocus
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-wide mb-3 ml-2">Diagnóstico (Opcional)</label>
-                                        <textarea 
-                                            rows="2"
-                                            placeholder="Esqueci a fórmula, errei conta de menos..." 
-                                            value={newItem.desc}
-                                            onChange={(e) => setNewItem({...newItem, desc: e.target.value})}
-                                            className="w-full bg-slate-50 border-none text-slate-700 text-sm font-semibold rounded-2xl focus:ring-4 focus:ring-indigo-100 block p-4 outline-none resize-none placeholder:text-slate-300"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-wide mb-3 ml-2">Link Útil</label>
-                                        <div className="relative">
-                                            <LinkIcon className="absolute left-4 top-4 text-slate-400" size={18} />
-                                            <input 
-                                                type="url" 
-                                                placeholder="https://..." 
-                                                value={newItem.link}
-                                                onChange={(e) => setNewItem({...newItem, link: e.target.value})}
-                                                className="w-full bg-slate-50 border-none text-blue-500 text-sm font-semibold rounded-2xl focus:ring-4 focus:ring-indigo-100 block p-4 pl-12 outline-none"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-4 flex gap-4">
-                                        <button 
-                                            type="submit"
-                                            className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-base px-6 py-4 transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]"
-                                        >
-                                            <Plus size={20} strokeWidth={3} /> Salvar Registro
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
-            );
-        }
+            </div>
 
-        // --- RENDERIZAÇÃO ---
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<VestibControl />);
+            <!-- Header Mês -->
+            <div class="flex items-center justify-between mb-8 pl-2">
+                <div>
+                    <h2 id="current-month-display" class="text-xl font-bold text-stone-800 tracking-tight capitalize">Janeiro</h2>
+                    <p id="current-year-display" class="text-sm text-stone-400 font-medium">2024</p>
+                </div>
+                <div class="flex gap-1">
+                    <button onclick="app.changeMonth(-1)" class="p-2 hover:bg-white rounded-full text-stone-400 hover:text-stone-800 transition-all hover:shadow-sm">
+                        <i data-lucide="chevron-left" width="18"></i>
+                    </button>
+                    <button onclick="app.changeMonth(1)" class="p-2 hover:bg-white rounded-full text-stone-400 hover:text-stone-800 transition-all hover:shadow-sm">
+                        <i data-lucide="chevron-right" width="18"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid Calendário -->
+            <div class="mb-8">
+                <div class="grid grid-cols-7 mb-4 text-[10px] font-bold tracking-widest text-stone-400 uppercase text-center">
+                    <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-y-3 place-items-center">
+                    <!-- Dias gerados via JS -->
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="mt-auto space-y-3">
+                <button onclick="app.toggleModal(true)" class="w-full py-4 px-5 bg-white border border-stone-100 hover:border-indigo-100 rounded-2xl flex items-center gap-4 group transition-all duration-300 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_25px_-4px_rgba(99,102,241,0.1)] hover:-translate-y-0.5">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-50 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                        <i data-lucide="sparkles" width="18"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-sm font-bold text-stone-700 group-hover:text-indigo-700 transition-colors">Gerador Inteligente</p>
+                        <p class="text-xs text-stone-400 font-medium">Configurar rotina & metas</p>
+                    </div>
+                </button>
+                
+                <button onclick="app.toggleTutorial(true)" class="w-full py-3 px-5 bg-transparent border border-transparent hover:bg-stone-100 rounded-xl flex items-center justify-center gap-2 text-stone-400 hover:text-stone-600 transition-all text-xs font-semibold">
+                    <i data-lucide="help-circle" width="14"></i>
+                    Como funciona?
+                </button>
+            </div>
+        </div>
+
+        <!-- DIREITA: AGENDA -->
+        <div class="flex-1 p-8 md:p-12 flex flex-col relative bg-white/50">
+            <!-- Decorativo -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-b from-stone-50 to-transparent opacity-50 -z-10 rounded-bl-[100px]"></div>
+
+            <!-- Header Dia -->
+            <header class="flex justify-between items-start mb-12">
+                <div class="flex flex-col">
+                    <h1 id="selected-day-number" class="text-6xl font-light text-stone-800 tracking-tighter leading-none mb-1">01</h1>
+                    <div class="flex items-center gap-2">
+                        <p id="selected-day-month" class="text-lg font-medium text-stone-400 capitalize">Janeiro</p>
+                        <span class="w-1 h-1 rounded-full bg-stone-300"></span>
+                        <p id="selected-day-weekday" class="text-lg font-medium text-stone-400 capitalize">Segunda-feira</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button id="today-btn" onclick="app.goToToday()" class="hidden px-4 py-2 bg-white border border-stone-100 text-stone-500 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-stone-50 transition-colors shadow-sm">
+                        Hoje
+                    </button>
+                    <!-- Botão Day Off -->
+                    <button id="dayoff-btn" onclick="app.toggleDayOff()" class="px-4 py-2 bg-rose-50 border border-rose-100 text-rose-500 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-rose-100 transition-colors shadow-sm flex items-center gap-2 group">
+                        <i data-lucide="coffee" width="14" class="group-hover:rotate-12 transition-transform"></i>
+                        Day Off
+                    </button>
+                </div>
+            </header>
+
+            <!-- Lista de Tarefas -->
+            <div id="tasks-list" class="flex-1 overflow-y-auto pr-3 custom-scrollbar space-y-4 relative">
+                <!-- Conteúdo gerado via JS -->
+            </div>
+
+            <!-- Input Flutuante (Escondido se for Day Off) -->
+            <div id="add-task-container" class="mt-6 pt-4">
+                <form onsubmit="app.addTask(event)" class="relative group">
+                    <div class="flex items-center gap-3 bg-white border border-stone-200 p-2 rounded-2xl shadow-sm transition-all duration-300 focus-within:ring-4 focus-within:ring-stone-50 focus-within:border-stone-300 focus-within:shadow-lg">
+                        <!-- Color Picker -->
+                        <div class="relative group/picker">
+                            <div id="current-color-preview" class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center cursor-pointer transition-transform active:scale-95">
+                                <div class="w-3 h-3 rounded-full bg-indigo-600"></div>
+                            </div>
+                            <div id="color-options" class="absolute bottom-full left-0 mb-3 p-1.5 bg-white border border-stone-100 shadow-xl rounded-xl flex gap-1.5 hidden group-hover/picker:flex z-20 animate-[slideUp_0.2s_ease-out]">
+                                <!-- Cores geradas via JS -->
+                            </div>
+                        </div>
+
+                        <input id="new-task-input" type="text" placeholder="Adicionar nova matéria..." class="flex-1 bg-transparent text-stone-700 placeholder-stone-400 focus:outline-none font-medium h-10 px-2">
+                        
+                        <button type="submit" class="w-10 h-10 flex items-center justify-center bg-stone-900 text-white rounded-xl hover:bg-black transition-all shadow-md active:scale-95">
+                            <i data-lucide="plus" width="20"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ROTINA -->
+    <div id="routine-modal" class="fixed inset-0 z-50 bg-stone-900/10 backdrop-blur-sm hidden items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl shadow-stone-300 overflow-hidden flex flex-col max-h-[90vh] border border-stone-100 slide-up">
+            <!-- Header -->
+            <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50/30">
+                <div class="flex items-center gap-4">
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-stone-100">
+                        <i data-lucide="settings" width="20" class="text-stone-600"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-stone-800">Gerador de Rotina</h2>
+                        <p class="text-xs text-stone-400 font-medium mt-0.5">Automatize seu planejamento</p>
+                    </div>
+                </div>
+                <button onclick="app.toggleModal(false)" class="p-2 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-600 transition-colors">
+                    <i data-lucide="x" width="20"></i>
+                </button>
+            </div>
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
+                <!-- 1. Métodos -->
+                <section>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-violet-600 mb-4 flex items-center gap-2">
+                        <i data-lucide="layers" width="14"></i> Métodos de Retenção
+                    </h3>
+                    <div class="grid sm:grid-cols-2 gap-4" id="methods-container"></div>
+                </section>
+                <!-- 2. Prioridades -->
+                <section>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-600 mb-4 flex items-center gap-2">
+                        <i data-lucide="alert-circle" width="14"></i> Matérias Prioritárias (Foco)
+                    </h3>
+                    <div class="bg-stone-50/50 rounded-2xl p-5 border border-stone-100">
+                        <div class="flex flex-wrap gap-2 mb-6" id="priorities-container"></div>
+                        <button onclick="app.generateSmartDistribution()" class="w-full py-3.5 bg-gradient-to-r from-stone-900 to-stone-800 hover:to-black text-white rounded-xl font-bold text-sm shadow-lg shadow-stone-200 transition-all flex items-center justify-center gap-2 active:scale-[0.98]">
+                            <i data-lucide="zap" width="16" class="text-yellow-400 fill-yellow-400"></i>
+                            Gerar Rotina Inteligente
+                        </button>
+                    </div>
+                </section>
+                <hr class="border-stone-100">
+                <!-- 3. Manual -->
+                <section class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-bold uppercase tracking-wider text-stone-400">Ajuste Fino (Manual)</label>
+                        <button onclick="app.applyPreset('ENEM')" class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">
+                            Carregar Modelo ENEM
+                        </button>
+                    </div>
+                    <div id="weekly-distribution" class="space-y-2"></div>
+                </section>
+            </div>
+            <!-- Footer -->
+            <div class="p-6 border-t border-stone-100 bg-stone-50/50 flex justify-end gap-3">
+                <button onclick="app.toggleModal(false)" class="px-6 py-3 rounded-xl text-stone-500 font-bold text-sm hover:bg-white hover:shadow-sm transition-all">
+                    Fechar
+                </button>
+                <button onclick="app.generateMonthSchedule()" class="px-8 py-3 bg-stone-900 text-white rounded-xl font-bold text-sm shadow-xl shadow-stone-200 hover:bg-black hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
+                    <i data-lucide="check" width="16"></i>
+                    Aplicar ao Calendário
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TUTORIAL (Novo) -->
+    <div id="tutorial-modal" class="fixed inset-0 z-50 bg-stone-900/20 backdrop-blur-sm hidden items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl shadow-stone-400 overflow-hidden border border-stone-100 slide-up p-8">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <i data-lucide="book-open" width="32"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-stone-800">Como usar seu Cronograma</h2>
+                <p class="text-stone-400 mt-1">Três passos para a produtividade máxima</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 shrink-0">1</div>
+                    <div>
+                        <h3 class="font-bold text-stone-700">Configure seu Perfil</h3>
+                        <p class="text-sm text-stone-500 leading-relaxed">No topo esquerdo, digite seu nome e o curso desejado. Isso personaliza sua experiência.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 shrink-0">2</div>
+                    <div>
+                        <h3 class="font-bold text-stone-700">Gere a Rotina</h3>
+                        <p class="text-sm text-stone-500 leading-relaxed">Clique no botão "Gerador Inteligente". Escolha matérias prioritárias e o site distribuirá automaticamente durante sua semana.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 shrink-0">3</div>
+                    <div>
+                        <h3 class="font-bold text-stone-700">Respeite seus Limites</h3>
+                        <p class="text-sm text-stone-500 leading-relaxed">Não conseguiu estudar? Clique em <strong>"Day Off"</strong>. O descanso é parte essencial do aprendizado.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="app.toggleTutorial(false)" class="w-full mt-8 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-black transition-all">
+                Entendi, vamos começar!
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script>
+        // --- CONSTANTES & DADOS ---
+        const COLORS = [
+            { id: 0, bg: 'bg-stone-100', text: 'text-stone-600', border: 'border-stone-200', dot: 'bg-stone-400', rawText: 'stone-600' },
+            { id: 1, bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-100', dot: 'bg-indigo-500', rawText: 'indigo-600' },
+            { id: 2, bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100', dot: 'bg-emerald-500', rawText: 'emerald-600' },
+            { id: 3, bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-100', dot: 'bg-rose-500', rawText: 'rose-600' },
+            { id: 4, bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100', dot: 'bg-amber-500', rawText: 'amber-600' },
+            { id: 5, bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-100', dot: 'bg-violet-500', rawText: 'violet-600' },
+        ];
+
+        const COMMON_SUBJECTS = ['Matemática', 'Física', 'Química', 'Biologia', 'História', 'Geografia', 'Filosofia', 'Sociologia', 'Português', 'Literatura', 'Redação', 'Inglês'];
+        const STUDY_PRESETS = { ENEM: { subjects: { 1: 'Português, Redação, Literatura', 2: 'Matemática, Física', 3: 'História, Geografia, Sociologia', 4: 'Química, Biologia', 5: 'Filosofia, Inglês, Artes' } } };
+        const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+        // --- CLASSE PRINCIPAL ---
+        class SchedulerApp {
+            constructor() {
+                // Estado
+                this.currentDate = new Date();
+                this.selectedDate = new Date();
+                this.tasks = JSON.parse(localStorage.getItem('min_calendar_tasks_v8')) || {};
+                this.routineConfig = JSON.parse(localStorage.getItem('min_calendar_routine_v8')) || {
+                    activeDays: [1, 2, 3, 4, 5],
+                    subjects: { 0: '', 1: '', 2: '', 3: '', 4: '', 5: '', 6: '' },
+                    priorities: [],
+                    includeAnki: false,
+                    includeReview: false
+                };
+                this.userProfile = JSON.parse(localStorage.getItem('min_calendar_profile_v8')) || { name: '', course: '' };
+                this.selectedColor = 1;
+
+                this.init();
+            }
+
+            init() {
+                this.renderCalendar();
+                this.renderDayHeader();
+                this.renderTasks();
+                this.renderColorPicker();
+                this.renderRoutineModal();
+                this.loadUserProfile();
+                lucide.createIcons();
+            }
+
+            save() {
+                localStorage.setItem('min_calendar_tasks_v8', JSON.stringify(this.tasks));
+                localStorage.setItem('min_calendar_routine_v8', JSON.stringify(this.routineConfig));
+            }
+
+            saveUserProfile() {
+                this.userProfile.name = document.getElementById('user-name-input').value;
+                this.userProfile.course = document.getElementById('user-course-input').value;
+                localStorage.setItem('min_calendar_profile_v8', JSON.stringify(this.userProfile));
+            }
+
+            loadUserProfile() {
+                document.getElementById('user-name-input').value = this.userProfile.name;
+                document.getElementById('user-course-input').value = this.userProfile.course;
+            }
+
+            formatDateKey(date) { return date.toISOString().split('T')[0]; }
+            isSameDay(d1, d2) { return d1.toDateString() === d2.toDateString(); }
+
+            changeMonth(offset) {
+                this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + offset, 1);
+                this.renderCalendar();
+                lucide.createIcons();
+            }
+
+            selectDay(day) {
+                this.selectedDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day);
+                this.renderCalendar();
+                this.renderDayHeader();
+                this.renderTasks();
+                lucide.createIcons();
+            }
+
+            goToToday() {
+                this.selectedDate = new Date();
+                this.currentDate = new Date();
+                this.init();
+            }
+
+            toggleDayOff() {
+                const dateKey = this.formatDateKey(this.selectedDate);
+                // Verifica se já é day off
+                const isOff = this.tasks[dateKey] && this.tasks[dateKey][0] && this.tasks[dateKey][0].id === 'day-off';
+                
+                if (isOff) {
+                    // Remover Day Off (Voltar ao normal vazio)
+                    this.tasks[dateKey] = [];
+                } else {
+                    // Ativar Day Off (Sobrescreve tarefas)
+                    if (confirm('Isso removerá as tarefas de hoje para marcar como descanso. Confirmar?')) {
+                        this.tasks[dateKey] = [{ id: 'day-off', title: 'Day Off', isDayOff: true }];
+                    } else {
+                        return;
+                    }
+                }
+                this.save();
+                this.renderTasks();
+                this.renderCalendar();
+                lucide.createIcons();
+            }
+
+            addTask(e) {
+                e.preventDefault();
+                const input = document.getElementById('new-task-input');
+                const title = input.value.trim();
+                if (!title) return;
+
+                const dateKey = this.formatDateKey(this.selectedDate);
+                
+                // Se era Day Off, limpa antes
+                if (this.tasks[dateKey] && this.tasks[dateKey][0] && this.tasks[dateKey][0].id === 'day-off') {
+                    this.tasks[dateKey] = [];
+                }
+
+                const newTask = { id: Date.now(), title: title, colorIndex: this.selectedColor, completed: false, studiedTime: '' };
+                if (!this.tasks[dateKey]) this.tasks[dateKey] = [];
+                this.tasks[dateKey].push(newTask);
+                
+                input.value = '';
+                this.save();
+                this.renderTasks();
+                this.renderCalendar();
+                lucide.createIcons();
+            }
+
+            toggleTask(id) {
+                const dateKey = this.formatDateKey(this.selectedDate);
+                if (this.tasks[dateKey]) {
+                    this.tasks[dateKey] = this.tasks[dateKey].map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+                    this.save();
+                    this.renderTasks();
+                    lucide.createIcons();
+                }
+            }
+
+            deleteTask(id) {
+                const dateKey = this.formatDateKey(this.selectedDate);
+                if (this.tasks[dateKey]) {
+                    this.tasks[dateKey] = this.tasks[dateKey].filter(t => t.id !== id);
+                    this.save();
+                    this.renderTasks();
+                    this.renderCalendar();
+                    lucide.createIcons();
+                }
+            }
+
+            updateStudiedTime(id, value) {
+                const dateKey = this.formatDateKey(this.selectedDate);
+                if (this.tasks[dateKey]) {
+                    this.tasks[dateKey] = this.tasks[dateKey].map(t => t.id === id ? { ...t, studiedTime: value } : t);
+                    this.save();
+                }
+            }
+
+            selectColor(index) {
+                this.selectedColor = index;
+                this.renderColorPicker();
+            }
+
+            toggleModal(show) {
+                const modal = document.getElementById('routine-modal');
+                modal.classList.toggle('hidden', !show);
+                modal.classList.toggle('flex', show);
+                if(show) this.renderRoutineModal();
+                lucide.createIcons();
+            }
+
+            toggleTutorial(show) {
+                const modal = document.getElementById('tutorial-modal');
+                modal.classList.toggle('hidden', !show);
+                modal.classList.toggle('flex', show);
+                lucide.createIcons();
+            }
+
+            // ... Métodos de Rotina (toggleConfigOption, togglePriority, etc. iguais ao anterior) ...
+            toggleConfigOption(key) { this.routineConfig[key] = !this.routineConfig[key]; this.save(); this.renderRoutineModal(); lucide.createIcons(); }
+            togglePriority(subject) { const idx = this.routineConfig.priorities.indexOf(subject); if(idx>-1)this.routineConfig.priorities.splice(idx,1); else this.routineConfig.priorities.push(subject); this.save(); this.renderRoutineModal(); }
+            toggleRoutineDay(dayIdx) { const idx = this.routineConfig.activeDays.indexOf(dayIdx); if(idx>-1)this.routineConfig.activeDays.splice(idx,1); else this.routineConfig.activeDays.push(dayIdx); this.routineConfig.activeDays.sort(); this.save(); this.renderRoutineModal(); }
+            updateRoutineSubject(dayIdx, value) { this.routineConfig.subjects[dayIdx] = value; this.save(); }
+            applyPreset(key) { this.routineConfig.activeDays = [1,2,3,4,5]; this.routineConfig.subjects = {...this.routineConfig.subjects, ...STUDY_PRESETS[key].subjects}; this.save(); this.renderRoutineModal(); }
+
+            generateSmartDistribution() {
+                const { priorities, activeDays } = this.routineConfig;
+                if (activeDays.length === 0) return alert("Selecione dias da semana.");
+                let pool = [];
+                priorities.forEach(s => { pool.push(s); pool.push(s); });
+                COMMON_SUBJECTS.filter(s => !priorities.includes(s)).forEach(s => pool.push(s));
+                pool.sort(() => Math.random() - 0.5);
+                const buckets = {};
+                activeDays.forEach(d => buckets[d] = []);
+                const canAdd = (day, subj) => !buckets[day].includes(subj) && buckets[day].length < 3;
+                let queue = [...pool];
+                while (queue.length > 0) {
+                    const subj = queue.shift();
+                    const sortedDays = [...activeDays].sort((a,b) => buckets[a].length - buckets[b].length);
+                    for (const day of sortedDays) { if (canAdd(day, subj)) { buckets[day].push(subj); break; } }
+                    if (activeDays.every(d => buckets[d].length >= 3)) break;
+                }
+                activeDays.forEach(d => this.routineConfig.subjects[d] = buckets[d].join(', '));
+                this.save();
+                this.renderRoutineModal();
+            }
+
+            generateMonthSchedule() {
+                const year = this.currentDate.getFullYear();
+                const month = this.currentDate.getMonth();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                let newTasks = { ...this.tasks };
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    const wDay = date.getDay();
+                    const key = this.formatDateKey(date);
+                    // Preserva Day Off se já existir e o usuário não quiser sobrescrever (aqui sobrescrevemos para aplicar nova rotina)
+                    const dayTasks = [];
+
+                    if (this.routineConfig.includeAnki && this.routineConfig.activeDays.includes(wDay)) 
+                        dayTasks.push({ id: Math.random(), title: "Anki / Flashcards", colorIndex: 5, completed: false, studiedTime: '' });
+                    
+                    if (this.routineConfig.includeReview && wDay === 6)
+                        dayTasks.push({ id: Math.random(), title: "Revisão Semanal", colorIndex: 4, completed: false, studiedTime: '' });
+
+                    if (this.routineConfig.activeDays.includes(wDay) && this.routineConfig.subjects[wDay]?.trim()) {
+                        this.routineConfig.subjects[wDay].split(',').filter(s=>s.trim()).forEach((sub, i) => {
+                            dayTasks.push({ id: Math.random(), title: sub.trim(), colorIndex: (i + 1) % 4, completed: false, studiedTime: '' });
+                        });
+                    }
+
+                    if (dayTasks.length > 0) {
+                        const existing = newTasks[key] || [];
+                        // Se for Day Off, não mexe? Ou reseta? Vamos resetar para aplicar a nova rotina.
+                        const existingTitles = new Set(existing.map(t => t.title));
+                        const unique = dayTasks.filter(t => !existingTitles.has(t.title));
+                        let ordered = existing[0]?.id === 'day-off' ? [] : [...existing]; // Remove day-off se gerar nova rotina em cima
+                        
+                        const anki = unique.find(t => t.title.includes("Anki"));
+                        const rev = unique.find(t => t.title.includes("Revisão"));
+                        const others = unique.filter(t => t !== anki && t !== rev);
+                        if (anki) ordered.push(anki);
+                        ordered.push(...others);
+                        if (rev) ordered.push(rev);
+                        newTasks[key] = ordered;
+                    }
+                }
+                this.tasks = newTasks;
+                this.save();
+                this.toggleModal(false);
+                this.renderCalendar();
+                this.renderTasks();
+                lucide.createIcons();
+            }
+
+            // --- RENDERS ---
+            renderCalendar() {
+                document.getElementById('current-month-display').textContent = MONTHS[this.currentDate.getMonth()];
+                document.getElementById('current-year-display').textContent = this.currentDate.getFullYear();
+                const year = this.currentDate.getFullYear();
+                const month = this.currentDate.getMonth();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const grid = document.getElementById('calendar-grid');
+                grid.innerHTML = '';
+                for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    const dateKey = this.formatDateKey(date);
+                    const isSelected = this.isSameDay(date, this.selectedDate);
+                    const isToday = this.isSameDay(date, new Date());
+                    
+                    const tasks = this.tasks[dateKey] || [];
+                    const hasTask = tasks.length > 0;
+                    const isDayOff = hasTask && tasks[0].id === 'day-off';
+                    
+                    const wDay = date.getDay();
+                    const isStudyDay = this.routineConfig.activeDays.includes(wDay) || (this.routineConfig.includeReview && wDay === 6);
+
+                    let classes = "w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 relative group ";
+                    if (isSelected) {
+                        classes += "bg-stone-800 text-white shadow-lg shadow-stone-800/30 scale-110";
+                    } else {
+                        classes += "text-stone-500 hover:bg-white hover:shadow-md hover:text-stone-800 ";
+                        if (isToday) classes += "text-indigo-600 font-bold bg-indigo-50 ";
+                        if (isStudyDay && !hasTask) classes += "ring-1 ring-stone-100 bg-white";
+                    }
+
+                    // Dots Logic
+                    let dot = '';
+                    if (isDayOff) dot = `<div class="absolute -bottom-1 w-1 h-1 bg-rose-400 rounded-full"></div>`;
+                    else if (hasTask && !isSelected) dot = `<div class="absolute -bottom-1 w-1 h-1 bg-stone-400 rounded-full"></div>`;
+
+                    const btn = document.createElement('button');
+                    btn.className = classes;
+                    btn.onclick = () => this.selectDay(day);
+                    btn.innerHTML = `${day}${dot}`;
+                    grid.appendChild(btn);
+                }
+            }
+
+            renderDayHeader() {
+                document.getElementById('selected-day-number').textContent = this.selectedDate.getDate().toString().padStart(2, '0');
+                document.getElementById('selected-day-month').textContent = MONTHS[this.selectedDate.getMonth()];
+                document.getElementById('selected-day-weekday').textContent = WEEKDAYS[this.selectedDate.getDay()];
+                document.getElementById('today-btn').classList.toggle('hidden', this.isSameDay(this.selectedDate, new Date()));
+            }
+
+            renderTasks() {
+                const list = document.getElementById('tasks-list');
+                const addContainer = document.getElementById('add-task-container');
+                const dateKey = this.formatDateKey(this.selectedDate);
+                const dayTasks = this.tasks[dateKey] || [];
+                
+                // Verifica Day Off
+                const isDayOff = dayTasks.length > 0 && dayTasks[0].id === 'day-off';
+                
+                // Botão de Day Off Estado Visual
+                const dayOffBtn = document.getElementById('dayoff-btn');
+                if (isDayOff) {
+                    dayOffBtn.classList.replace('bg-rose-50', 'bg-rose-500');
+                    dayOffBtn.classList.replace('text-rose-500', 'text-white');
+                    addContainer.classList.add('hidden'); // Esconde input se for day off
+                } else {
+                    dayOffBtn.classList.replace('bg-rose-500', 'bg-rose-50');
+                    dayOffBtn.classList.replace('text-white', 'text-rose-500');
+                    addContainer.classList.remove('hidden');
+                }
+
+                list.innerHTML = '';
+
+                // Visual Day Off
+                if (isDayOff) {
+                    list.innerHTML = `
+                        <div class="h-full flex flex-col items-center justify-center text-rose-300 select-none pb-20 fade-in">
+                            <div class="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mb-6 shadow-inner animate-pulse">
+                                <i data-lucide="coffee" width="32" class="opacity-40"></i>
+                            </div>
+                            <p class="text-xl font-bold text-rose-400">Day Off</p>
+                            <p class="text-sm text-rose-300/80 mt-2 max-w-[200px] text-center">Recarregue as energias. O descanso também faz parte do processo.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Lista Vazia
+                if (dayTasks.length === 0) {
+                    list.innerHTML = `
+                        <div class="h-full flex flex-col items-center justify-center text-stone-300 select-none pb-20">
+                            <div class="w-24 h-24 bg-stone-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                                <i data-lucide="calendar" width="32" class="opacity-20"></i>
+                            </div>
+                            <p class="text-xl font-light text-stone-400">Dia livre</p>
+                            <p class="text-sm text-stone-300 mt-2">Nenhuma atividade planejada.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Renderiza Tarefas
+                dayTasks.forEach(task => {
+                    const theme = COLORS[task.colorIndex || 0];
+                    const completedClass = task.completed ? 'bg-stone-50/50 border-stone-100 opacity-60' : 'bg-white border-stone-100 hover:border-stone-200 shadow-[0_2px_15px_-4px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.06)] hover:-translate-y-0.5';
+                    const checkClass = task.completed ? 'bg-stone-800 border-stone-800 text-white scale-90' : 'border-stone-200 text-transparent hover:border-stone-400';
+                    const textClass = task.completed ? 'text-stone-400 line-through decoration-stone-300' : 'text-stone-700';
+                    
+                    const el = document.createElement('div');
+                    el.className = `group relative flex items-center gap-5 p-5 rounded-[1.2rem] border transition-all duration-300 ${completedClass}`;
+                    
+                    el.innerHTML = `
+                        <button onclick="app.toggleTask(${task.id})" class="flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${checkClass}">
+                            <i data-lucide="check" width="14" stroke-width="3"></i>
+                        </button>
+                        <div class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                            <p class="font-medium text-lg truncate transition-all ${textClass}">${task.title}</p>
+                            <div class="flex items-center gap-2 ml-auto">
+                                <div class="group/input flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 ${task.completed ? 'bg-transparent border-transparent' : 'bg-stone-50/50 border-stone-100 focus-within:bg-white focus-within:border-stone-300 focus-within:shadow-sm'}">
+                                    <i data-lucide="timer" width="13" class="text-stone-300 group-focus-within/input:text-stone-500"></i>
+                                    <input type="text" placeholder="Tempo" value="${task.studiedTime}" 
+                                        oninput="app.updateStudiedTime(${task.id}, this.value)"
+                                        onclick="event.stopPropagation()"
+                                        class="bg-transparent text-xs font-semibold text-stone-600 placeholder-stone-300 focus:outline-none w-16 text-right">
+                                </div>
+                                <div class="w-2 h-2 rounded-full ${theme.dot}"></div>
+                            </div>
+                        </div>
+                        <button onclick="app.deleteTask(${task.id})" class="absolute right-2 top-2 sm:static opacity-0 group-hover:opacity-100 p-2 text-stone-300 hover:text-rose-400 transition-all hover:bg-rose-50 rounded-lg">
+                            <i data-lucide="trash-2" width="16"></i>
+                        </button>
+                    `;
+                    list.appendChild(el);
+                });
+            }
+
+            renderColorPicker() {
+                const preview = document.getElementById('current-color-preview');
+                const theme = COLORS[this.selectedColor];
+                preview.className = `w-10 h-10 rounded-xl ${theme.bg} border ${theme.border} flex items-center justify-center cursor-pointer transition-transform active:scale-95`;
+                preview.innerHTML = `<div class="w-3 h-3 rounded-full ${theme.dot}"></div>`;
+                const opts = document.getElementById('color-options');
+                opts.innerHTML = '';
+                COLORS.forEach((c, i) => {
+                    const ring = this.selectedColor === i ? `ring-2 ring-offset-1 ring-stone-300` : '';
+                    const div = document.createElement('div');
+                    div.className = `w-6 h-6 rounded-full cursor-pointer ${c.bg} border ${c.border} hover:scale-110 transition-transform ${ring}`;
+                    div.onclick = () => this.selectColor(i);
+                    opts.appendChild(div);
+                });
+            }
+
+            renderRoutineModal() {
+                const methodsContainer = document.getElementById('methods-container');
+                methodsContainer.innerHTML = '';
+                [{ key: 'includeAnki', label: 'Anki Diário', sub: 'Flashcards todo dia', icon: 'layers', color: 'violet' },
+                 { key: 'includeReview', label: 'Revisão Semanal', sub: 'Sábados de revisão', icon: 'repeat', color: 'amber' }
+                ].forEach(m => {
+                    const active = this.routineConfig[m.key];
+                    const activeClass = active ? `bg-${m.color}-50 border-${m.color}-200` : 'bg-white border-stone-100 hover:border-stone-200 hover:shadow-sm';
+                    const iconBg = active ? `bg-${m.color}-500 text-white shadow-md` : 'bg-stone-100 text-stone-400';
+                    const textClass = active ? `text-${m.color}-900` : 'text-stone-700';
+                    const btn = document.createElement('button');
+                    btn.className = `flex items-center gap-4 p-4 rounded-2xl border transition-all text-left group ${activeClass}`;
+                    btn.onclick = () => this.toggleConfigOption(m.key);
+                    btn.innerHTML = `<div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${iconBg}"><i data-lucide="${active ? 'check' : m.icon}" width="16"></i></div><div><span class="font-bold block text-sm ${textClass}">${m.label}</span><span class="text-xs text-stone-400">${m.sub}</span></div>`;
+                    methodsContainer.appendChild(btn);
+                });
+
+                const prioritiesContainer = document.getElementById('priorities-container');
+                prioritiesContainer.innerHTML = '';
+                COMMON_SUBJECTS.forEach(sub => {
+                    const active = this.routineConfig.priorities.includes(sub);
+                    const btn = document.createElement('button');
+                    btn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${active ? 'bg-amber-100 text-amber-800 border-amber-200 shadow-sm' : 'bg-white text-stone-500 border-stone-200 hover:border-amber-200 hover:text-stone-700'}`;
+                    btn.onclick = () => this.togglePriority(sub);
+                    btn.textContent = sub;
+                    prioritiesContainer.appendChild(btn);
+                });
+
+                const weekContainer = document.getElementById('weekly-distribution');
+                weekContainer.innerHTML = '';
+                WEEKDAYS.forEach((dayName, idx) => {
+                    const isActive = this.routineConfig.activeDays.includes(idx);
+                    const containerClass = isActive ? 'border-indigo-100 bg-indigo-50/30' : 'border-stone-100 bg-white opacity-60';
+                    const btnClass = isActive ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-stone-100 text-stone-400 hover:bg-stone-200';
+                    const el = document.createElement('div');
+                    el.className = `group border rounded-2xl p-1 transition-all duration-300 ${containerClass}`;
+                    let contentRight = isActive ? `<input type="text" placeholder="Matérias..." value="${this.routineConfig.subjects[idx] || ''}" onchange="app.updateRoutineSubject(${idx}, this.value)" class="w-full bg-transparent border-b border-transparent focus:border-indigo-200 px-2 py-1 text-sm text-stone-700 placeholder-indigo-200/50 focus:outline-none transition-colors">` : `<div class="text-xs text-stone-300 px-2 cursor-pointer select-none" onclick="app.toggleRoutineDay(${idx})">Dia de descanso</div>`;
+                    el.innerHTML = `<div class="flex items-center gap-3 p-2"><button onclick="app.toggleRoutineDay(${idx})" class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all font-bold text-xs uppercase ${btnClass}">${dayName.substring(0, 3)}</button><div class="flex-1">${contentRight}</div></div>`;
+                    weekContainer.appendChild(el);
+                });
+            }
+        }
+        const app = new SchedulerApp();
     </script>
 </body>
 </html>
