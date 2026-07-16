@@ -1,749 +1,1290 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cronograma Minimalista Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meu Cronograma RPG V18.0</title>
     
-    <!-- Tailwind CSS (Design) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Lucide Icons (Ícones) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- Fontes Google -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        
-        /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
-
-        /* Animações e Transições */
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        .slide-up { animation: slideUp 0.3s ease-out; }
-        .slide-right { animation: slideRight 0.4s ease-out; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes slideRight { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
                     colors: {
-                        stone: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1', 400: '#a8a29e', 500: '#78716c', 600: '#57534e', 700: '#44403c', 800: '#292524', 900: '#1c1917' }
+                        dark: { bg: '#0f172a', card: '#1e293b', border: '#334155' }
+                    },
+                    animation: {
+                        'flip': 'flip 0.6s',
+                        'float': 'float 3s ease-in-out infinite',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
                     }
                 }
             }
         }
     </script>
-</head>
-<body class="min-h-screen bg-[#FDFBF9] text-stone-700 flex items-center justify-center p-4 selection:bg-indigo-100 selection:text-indigo-800">
-
-    <!-- App Container -->
-    <div class="max-w-6xl w-full bg-[#FCFCFC] rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col md:flex-row min-h-[800px] border border-stone-100 relative">
+    <style>
+        body {
+            background-attachment: fixed;
+            background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%), radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 25%);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
+        }
         
-        <!-- ESQUERDA: CALENDÁRIO & PERFIL -->
-        <div class="w-full md:w-[380px] bg-[#FAFAFA] p-8 border-r border-stone-100 flex flex-col z-10 relative">
+        .task-item { cursor: grab; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; }
+        .task-item:active { cursor: grabbing; transform: scale(0.98); }
+        .task-item.dragging { opacity: 0.6; transform: scale(1.02) rotate(2deg); z-index: 50; border-color: currentColor; }
+        .drag-over { background-color: rgba(99, 102, 241, 0.1) !important; border: 2px dashed currentColor !important; }
+        
+        .task-item .delete-btn { transition: opacity 0.2s; }
+        @media (min-width: 768px) {
+            .task-item .delete-btn { opacity: 0; }
+            .task-item:hover .delete-btn { opacity: 1; transform: scale(1); }
+        }
+        @media (max-width: 767px) {
+             .task-item .delete-btn { opacity: 1; }
+        }
+        
+        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 9999px; font-size: 0.875rem; cursor: pointer; transition: all 0.2s ease; position: relative; }
+        .calendar-day:hover:not(.empty) { background-color: rgba(99, 102, 241, 0.1); }
+        .calendar-day.has-history { font-weight: bold; color: white; }
+        
+        .perspective-1000 { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        #helpPanel { transition: opacity 0.3s ease, transform 0.3s ease; }
+        
+        .achievement-card { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .achievement-card:hover { transform: translateY(-5px) scale(1.02); }
+        .achievement-locked { filter: grayscale(100%) opacity(0.4); transition: all 0.3s; }
+        .achievement-locked:hover { filter: grayscale(100%) opacity(0.6); transform: none; }
+        
+        /* Progress Bar Stripes */
+        .progress-striped {
+            background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+        @keyframes progress-bar-stripes { 0% { background-position: 1rem 0; } 100% { background-position: 0 0; } }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        .avatar-preview { object-fit: cover; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-dark-bg dark:text-slate-50 min-h-screen selection:bg-indigo-500 selection:text-white transition-colors duration-300 overflow-x-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- Config & Constants ---
+        const STORAGE_KEY = 'studyScheduleData_V18_0_UltraHardcore'; 
+        
+        const THEMES = {
+            indigo: { name: 'Indigo', class: 'text-indigo-600', bg: 'bg-indigo-600', border: 'border-indigo-500', from: 'from-indigo-600', to: 'to-purple-600' },
+            emerald: { name: 'Esmeralda', class: 'text-emerald-600', bg: 'bg-emerald-600', border: 'border-emerald-500', from: 'from-emerald-600', to: 'to-teal-600' },
+            rose: { name: 'Rosa', class: 'text-rose-600', bg: 'bg-rose-600', border: 'border-rose-500', from: 'from-rose-600', to: 'to-pink-600' },
+            amber: { name: 'Laranja', class: 'text-amber-600', bg: 'bg-amber-600', border: 'border-amber-500', from: 'from-amber-500', to: 'to-orange-600' },
+            sky: { name: 'Céu', class: 'text-sky-600', bg: 'bg-sky-600', border: 'border-sky-500', from: 'from-sky-500', to: 'to-blue-600' },
+        };
+
+        // Study Levels Configuration
+        const STUDY_LEVELS = {
+            'Básico': { label: 'Básico', minutes: 30, xpMultiplier: 1.0, color: 'bg-green-500', icon: '🌱' },
+            'Médio': { label: 'Médio', minutes: 60, xpMultiplier: 1.2, color: 'bg-yellow-500', icon: '🔥' },
+            'Hardcore': { label: 'Hardcore', minutes: 120, xpMultiplier: 2.0, color: 'bg-red-600', icon: '💪' },
+            'Ultra-Hardcore': { label: 'Ultra-Hardcore', minutes: 240, xpMultiplier: 3.0, color: 'bg-purple-900', icon: '☠️' }
+        };
+
+        // --- ACHIEVEMENTS LIST EXPANDED ---
+        const ACHIEVEMENTS_LIST = [
+            // INÍCIO
+            { id: 'first_step', title: 'Primeiros Passos', desc: 'Ganhe seus primeiros 50 XP.', icon: 'footprints', xp: 50, gradient: 'linear-gradient(135deg, #60a5fa, #3b82f6)', req: (d) => d.xp >= 50 },
             
-            <!-- Perfil do Usuário (Novo) -->
-            <div class="mb-8 pb-6 border-b border-stone-100 slide-right">
-                <div class="flex items-center gap-4 mb-2">
-                    <div class="w-12 h-12 rounded-2xl bg-white border border-stone-100 flex items-center justify-center shadow-sm text-stone-300">
-                        <i data-lucide="user" width="20"></i>
-                    </div>
-                    <div class="flex-1">
-                        <input id="user-name-input" type="text" placeholder="Seu Nome" 
-                            onchange="app.saveUserProfile()"
-                            class="w-full bg-transparent border-none p-0 text-lg font-bold text-stone-800 placeholder-stone-300 focus:ring-0 focus:outline-none transition-colors hover:placeholder-stone-400"
-                        >
-                        <div class="flex items-center gap-1.5 text-xs text-stone-400">
-                            <i data-lucide="graduation-cap" width="12"></i>
-                            <input id="user-course-input" type="text" placeholder="Curso dos Sonhos..." 
-                                onchange="app.saveUserProfile()"
-                                class="w-full bg-transparent border-none p-0 text-xs font-medium text-stone-500 placeholder-stone-300 focus:ring-0 focus:outline-none"
-                            >
-                        </div>
-                    </div>
-                </div>
-            </div>
+            // REDAÇÃO
+            { id: 'essay_novice', title: 'Escritor Iniciante', desc: 'Escreva 1 redação.', icon: 'pen-tool', xp: 100, gradient: 'linear-gradient(135deg, #f472b6, #db2777)', req: (d) => d.essays.length >= 1 },
+            { id: 'essay_pro', title: 'Jornalista', desc: 'Escreva 5 redações.', icon: 'feather', xp: 300, gradient: 'linear-gradient(135deg, #fb7185, #e11d48)', req: (d) => d.essays.length >= 5 },
+            { id: 'essay_master', title: 'Machado de Assis', desc: 'Escreva 10 redações.', icon: 'book-open', xp: 1000, gradient: 'linear-gradient(135deg, #c084fc, #7e22ce)', req: (d) => d.essays.length >= 10 },
+            { id: 'essay_900', title: 'Meu Primeiro 900+', desc: 'Tire 900+ em uma redação.', icon: 'award', xp: 1000, gradient: 'linear-gradient(135deg, #facc15, #a16207)', req: (d) => d.essays.some(e => e.grade >= 900) },
 
-            <!-- Header Mês -->
-            <div class="flex items-center justify-between mb-8 pl-2">
-                <div>
-                    <h2 id="current-month-display" class="text-xl font-bold text-stone-800 tracking-tight capitalize">Janeiro</h2>
-                    <p id="current-year-display" class="text-sm text-stone-400 font-medium">2024</p>
-                </div>
-                <div class="flex gap-1">
-                    <button onclick="app.changeMonth(-1)" class="p-2 hover:bg-white rounded-full text-stone-400 hover:text-stone-800 transition-all hover:shadow-sm">
-                        <i data-lucide="chevron-left" width="18"></i>
-                    </button>
-                    <button onclick="app.changeMonth(1)" class="p-2 hover:bg-white rounded-full text-stone-400 hover:text-stone-800 transition-all hover:shadow-sm">
-                        <i data-lucide="chevron-right" width="18"></i>
-                    </button>
-                </div>
-            </div>
+            // SIMULADOS & TRI
+            { id: 'simulado_rookie', title: 'Primeiro Teste', desc: 'Complete 1 simulado.', icon: 'clipboard-list', xp: 150, gradient: 'linear-gradient(135deg, #38bdf8, #0284c7)', req: (d) => d.simulados.length >= 1 },
+            { id: 'simulado_pro', title: 'Concurseiro', desc: 'Complete 5 simulados.', icon: 'graduation-cap', xp: 500, gradient: 'linear-gradient(135deg, #818cf8, #4338ca)', req: (d) => d.simulados.length >= 5 },
+            { id: 'simulado_elite', title: 'Gabaritou', desc: 'Acerte mais de 90% num simulado.', icon: 'check-circle-2', xp: 800, gradient: 'linear-gradient(135deg, #4ade80, #16a34a)', req: (d) => d.simulados.some(s => s.percentage >= 90) },
+            { id: 'tri_master', title: 'Mestre do TRI', desc: 'Tire mais de 750 (TRI) num simulado.', icon: 'bar-chart-4', xp: 1200, gradient: 'linear-gradient(135deg, #f43f5e, #9f1239)', req: (d) => d.simulados.some(s => s.triScore && s.triScore >= 750) },
+            
+            // TEMPO & FOCO
+            { id: 'hours_10', title: 'Maratonista', desc: 'Acumule 10h de estudo.', icon: 'clock', xp: 300, gradient: 'linear-gradient(135deg, #2dd4bf, #0f766e)', req: (d) => d.totalMinutes >= 600 },
+            { id: 'hours_50', title: 'Dedicação Total', desc: 'Acumule 50h de estudo.', icon: 'battery-charging', xp: 2000, gradient: 'linear-gradient(135deg, #fbbf24, #b45309)', req: (d) => d.totalMinutes >= 3000 },
+            { id: 'hours_100', title: 'Centenário', desc: 'Acumule 100h de estudo.', icon: 'crown', xp: 5000, gradient: 'linear-gradient(135deg, #fbbf24, #78350f)', req: (d) => d.totalMinutes >= 6000 },
+            { id: 'pomodoro_novice', title: 'Foco Iniciante', desc: 'Complete 1 ciclo Pomodoro.', icon: 'timer', xp: 100, gradient: 'linear-gradient(135deg, #22d3ee, #0891b2)', req: (d) => d.pomoCompleted >= 1 },
+            { id: 'pomodoro_master', title: 'Monge do Foco', desc: 'Complete 10 ciclos Pomodoro.', icon: 'hourglass', xp: 1000, gradient: 'linear-gradient(135deg, #0ea5e9, #0369a1)', req: (d) => d.pomoCompleted >= 10 },
 
-            <!-- Grid Calendário -->
-            <div class="mb-8">
-                <div class="grid grid-cols-7 mb-4 text-[10px] font-bold tracking-widest text-stone-400 uppercase text-center">
-                    <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
-                </div>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-y-3 place-items-center">
-                    <!-- Dias gerados via JS -->
-                </div>
-            </div>
+            // SEQUÊNCIA (STREAK)
+            { id: 'streak_3', title: 'Aquecendo', desc: 'Sequência de 3 dias.', icon: 'flame', xp: 200, gradient: 'linear-gradient(135deg, #fdba74, #c2410c)', req: (d) => d.streak >= 3 },
+            { id: 'streak_7', title: 'Imparável', desc: 'Sequência de 7 dias.', icon: 'zap', xp: 500, gradient: 'linear-gradient(135deg, #facc15, #ca8a04)', req: (d) => d.streak >= 7 },
+            { id: 'streak_30', title: 'Disciplina de Ferro', desc: 'Sequência de 30 dias.', icon: 'shield-check', xp: 3000, gradient: 'linear-gradient(135deg, #94a3b8, #475569)', req: (d) => d.streak >= 30 },
 
-            <!-- Botões de Ação -->
-            <div class="mt-auto space-y-3">
-                <button onclick="app.toggleModal(true)" class="w-full py-4 px-5 bg-white border border-stone-100 hover:border-indigo-100 rounded-2xl flex items-center gap-4 group transition-all duration-300 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_25px_-4px_rgba(99,102,241,0.1)] hover:-translate-y-0.5">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-50 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                        <i data-lucide="sparkles" width="18"></i>
-                    </div>
-                    <div class="text-left">
-                        <p class="text-sm font-bold text-stone-700 group-hover:text-indigo-700 transition-colors">Gerador Inteligente</p>
-                        <p class="text-xs text-stone-400 font-medium">Configurar rotina & metas</p>
-                    </div>
-                </button>
-                
-                <button onclick="app.toggleTutorial(true)" class="w-full py-3 px-5 bg-transparent border border-transparent hover:bg-stone-100 rounded-xl flex items-center justify-center gap-2 text-stone-400 hover:text-stone-600 transition-all text-xs font-semibold">
-                    <i data-lucide="help-circle" width="14"></i>
-                    Como funciona?
-                </button>
-            </div>
-        </div>
+            // ESPECIAIS & HORÁRIOS
+            { id: 'early_bird', title: 'Madrugador', desc: 'Estude antes das 8h da manhã.', icon: 'sunrise', xp: 250, gradient: 'linear-gradient(135deg, #fde047, #eab308)', req: (d) => { const h = new Date().getHours(); return h < 8 && d.todayMinutes > 0; } },
+            { id: 'night_owl', title: 'Corujão', desc: 'Estude depois das 22h.', icon: 'moon', xp: 250, gradient: 'linear-gradient(135deg, #6366f1, #312e81)', req: (d) => { const h = new Date().getHours(); return h >= 22 && d.todayMinutes > 0; } },
+            { id: 'weekend_warrior', title: 'Guerreiro de FDS', desc: 'Estude no Sábado ou Domingo.', icon: 'sword', xp: 400, gradient: 'linear-gradient(135deg, #ef4444, #991b1b)', req: (d) => { const day = new Date().getDay(); return (day === 0 || day === 6) && d.todayMinutes > 0; } },
 
-        <!-- DIREITA: AGENDA -->
-        <div class="flex-1 p-8 md:p-12 flex flex-col relative bg-white/50">
-            <!-- Decorativo -->
-            <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-b from-stone-50 to-transparent opacity-50 -z-10 rounded-bl-[100px]"></div>
-
-            <!-- Header Dia -->
-            <header class="flex justify-between items-start mb-12">
-                <div class="flex flex-col">
-                    <h1 id="selected-day-number" class="text-6xl font-light text-stone-800 tracking-tighter leading-none mb-1">01</h1>
-                    <div class="flex items-center gap-2">
-                        <p id="selected-day-month" class="text-lg font-medium text-stone-400 capitalize">Janeiro</p>
-                        <span class="w-1 h-1 rounded-full bg-stone-300"></span>
-                        <p id="selected-day-weekday" class="text-lg font-medium text-stone-400 capitalize">Segunda-feira</p>
-                    </div>
-                </div>
-                
-                <div class="flex gap-2">
-                    <button id="today-btn" onclick="app.goToToday()" class="hidden px-4 py-2 bg-white border border-stone-100 text-stone-500 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-stone-50 transition-colors shadow-sm">
-                        Hoje
-                    </button>
-                    <!-- Botão Day Off -->
-                    <button id="dayoff-btn" onclick="app.toggleDayOff()" class="px-4 py-2 bg-rose-50 border border-rose-100 text-rose-500 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-rose-100 transition-colors shadow-sm flex items-center gap-2 group">
-                        <i data-lucide="coffee" width="14" class="group-hover:rotate-12 transition-transform"></i>
-                        Day Off
-                    </button>
-                </div>
-            </header>
-
-            <!-- Lista de Tarefas -->
-            <div id="tasks-list" class="flex-1 overflow-y-auto pr-3 custom-scrollbar space-y-4 relative">
-                <!-- Conteúdo gerado via JS -->
-            </div>
-
-            <!-- Input Flutuante (Escondido se for Day Off) -->
-            <div id="add-task-container" class="mt-6 pt-4">
-                <form onsubmit="app.addTask(event)" class="relative group">
-                    <div class="flex items-center gap-3 bg-white border border-stone-200 p-2 rounded-2xl shadow-sm transition-all duration-300 focus-within:ring-4 focus-within:ring-stone-50 focus-within:border-stone-300 focus-within:shadow-lg">
-                        <!-- Color Picker -->
-                        <div class="relative group/picker">
-                            <div id="current-color-preview" class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center cursor-pointer transition-transform active:scale-95">
-                                <div class="w-3 h-3 rounded-full bg-indigo-600"></div>
-                            </div>
-                            <div id="color-options" class="absolute bottom-full left-0 mb-3 p-1.5 bg-white border border-stone-100 shadow-xl rounded-xl flex gap-1.5 hidden group-hover/picker:flex z-20 animate-[slideUp_0.2s_ease-out]">
-                                <!-- Cores geradas via JS -->
-                            </div>
-                        </div>
-
-                        <input id="new-task-input" type="text" placeholder="Adicionar nova matéria..." class="flex-1 bg-transparent text-stone-700 placeholder-stone-400 focus:outline-none font-medium h-10 px-2">
-                        
-                        <button type="submit" class="w-10 h-10 flex items-center justify-center bg-stone-900 text-white rounded-xl hover:bg-black transition-all shadow-md active:scale-95">
-                            <i data-lucide="plus" width="20"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE ROTINA -->
-    <div id="routine-modal" class="fixed inset-0 z-50 bg-stone-900/10 backdrop-blur-sm hidden items-center justify-center p-4 fade-in">
-        <div class="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl shadow-stone-300 overflow-hidden flex flex-col max-h-[90vh] border border-stone-100 slide-up">
-            <!-- Header -->
-            <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50/30">
-                <div class="flex items-center gap-4">
-                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-stone-100">
-                        <i data-lucide="settings" width="20" class="text-stone-600"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-stone-800">Gerador de Rotina</h2>
-                        <p class="text-xs text-stone-400 font-medium mt-0.5">Automatize seu planejamento</p>
-                    </div>
-                </div>
-                <button onclick="app.toggleModal(false)" class="p-2 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-600 transition-colors">
-                    <i data-lucide="x" width="20"></i>
-                </button>
-            </div>
-            <!-- Content -->
-            <div class="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
-                <!-- 1. Métodos -->
-                <section>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-violet-600 mb-4 flex items-center gap-2">
-                        <i data-lucide="layers" width="14"></i> Métodos de Retenção
-                    </h3>
-                    <div class="grid sm:grid-cols-2 gap-4" id="methods-container"></div>
-                </section>
-                <!-- 2. Prioridades -->
-                <section>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-600 mb-4 flex items-center gap-2">
-                        <i data-lucide="alert-circle" width="14"></i> Matérias Prioritárias (Foco)
-                    </h3>
-                    <div class="bg-stone-50/50 rounded-2xl p-5 border border-stone-100">
-                        <div class="flex flex-wrap gap-2 mb-6" id="priorities-container"></div>
-                        <button onclick="app.generateSmartDistribution()" class="w-full py-3.5 bg-gradient-to-r from-stone-900 to-stone-800 hover:to-black text-white rounded-xl font-bold text-sm shadow-lg shadow-stone-200 transition-all flex items-center justify-center gap-2 active:scale-[0.98]">
-                            <i data-lucide="zap" width="16" class="text-yellow-400 fill-yellow-400"></i>
-                            Gerar Rotina Inteligente
-                        </button>
-                    </div>
-                </section>
-                <hr class="border-stone-100">
-                <!-- 3. Manual -->
-                <section class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <label class="text-xs font-bold uppercase tracking-wider text-stone-400">Ajuste Fino (Manual)</label>
-                        <button onclick="app.applyPreset('ENEM')" class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">
-                            Carregar Modelo ENEM
-                        </button>
-                    </div>
-                    <div id="weekly-distribution" class="space-y-2"></div>
-                </section>
-            </div>
-            <!-- Footer -->
-            <div class="p-6 border-t border-stone-100 bg-stone-50/50 flex justify-end gap-3">
-                <button onclick="app.toggleModal(false)" class="px-6 py-3 rounded-xl text-stone-500 font-bold text-sm hover:bg-white hover:shadow-sm transition-all">
-                    Fechar
-                </button>
-                <button onclick="app.generateMonthSchedule()" class="px-8 py-3 bg-stone-900 text-white rounded-xl font-bold text-sm shadow-xl shadow-stone-200 hover:bg-black hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
-                    <i data-lucide="check" width="16"></i>
-                    Aplicar ao Calendário
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL TUTORIAL (Novo) -->
-    <div id="tutorial-modal" class="fixed inset-0 z-50 bg-stone-900/20 backdrop-blur-sm hidden items-center justify-center p-4 fade-in">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl shadow-stone-400 overflow-hidden border border-stone-100 slide-up p-8">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                    <i data-lucide="book-open" width="32"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-stone-800">Como usar seu Cronograma</h2>
-                <p class="text-stone-400 mt-1">Três passos para a produtividade máxima</p>
-            </div>
-
-            <div class="space-y-6">
-                <div class="flex gap-4">
-                    <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 shrink-0">1</div>
-                    <div>
-                        <h3 class="font-bold text-stone-700">Configure seu Perfil</h3>
-                        <p class="text-sm text-stone-500 leading-relaxed">No topo esquerdo, digite seu nome e o curso desejado. Isso personaliza sua experiência.</p>
-                    </div>
-                </div>
-                <div class="flex gap-4">
-                    <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 shrink-0">2</div>
-                    <div>
-                        <h3 class="font-bold text-stone-700">Gere a Rotina</h3>
-                        <p class="text-sm text-stone-500 leading-relaxed">Clique no botão "Gerador Inteligente". Escolha matérias prioritárias e o site distribuirá automaticamente durante sua semana.</p>
-                    </div>
-                </div>
-                <div class="flex gap-4">
-                    <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-bold text-stone-600 shrink-0">3</div>
-                    <div>
-                        <h3 class="font-bold text-stone-700">Respeite seus Limites</h3>
-                        <p class="text-sm text-stone-500 leading-relaxed">Não conseguiu estudar? Clique em <strong>"Day Off"</strong>. O descanso é parte essencial do aprendizado.</p>
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="app.toggleTutorial(false)" class="w-full mt-8 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-black transition-all">
-                Entendi, vamos começar!
-            </button>
-        </div>
-    </div>
-
-    <!-- LOGIC -->
-    <script>
-        // --- CONSTANTES & DADOS ---
-        const COLORS = [
-            { id: 0, bg: 'bg-stone-100', text: 'text-stone-600', border: 'border-stone-200', dot: 'bg-stone-400', rawText: 'stone-600' },
-            { id: 1, bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-100', dot: 'bg-indigo-500', rawText: 'indigo-600' },
-            { id: 2, bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100', dot: 'bg-emerald-500', rawText: 'emerald-600' },
-            { id: 3, bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-100', dot: 'bg-rose-500', rawText: 'rose-600' },
-            { id: 4, bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100', dot: 'bg-amber-500', rawText: 'amber-600' },
-            { id: 5, bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-100', dot: 'bg-violet-500', rawText: 'violet-600' },
+            // ERROS
+            { id: 'error_tracker', title: 'Autocrítico', desc: 'Registre 5 erros no caderno.', icon: 'book-x', xp: 300, gradient: 'linear-gradient(135deg, #f87171, #dc2626)', req: (d) => d.errorNotes.length >= 5 },
+            
+            // NÍVEIS
+            { id: 'level_5', title: 'Veterano', desc: 'Alcance o nível 5.', icon: 'chevrons-up', xp: 500, gradient: 'linear-gradient(135deg, #2dd4bf, #0f766e)', req: (d) => d.level >= 5 },
+            { id: 'level_10', title: 'Lendário', desc: 'Alcance o nível 10.', icon: 'star', xp: 2000, gradient: 'linear-gradient(135deg, #f59e0b, #b45309)', req: (d) => d.level >= 10 },
+            { id: 'ultra_hardcore', title: 'Sobrevivente', desc: 'Ative o modo Ultra-Hardcore.', icon: 'skull', xp: 666, gradient: 'linear-gradient(135deg, #000000, #4c1d95)', req: (d) => d.studyLevel === 'Ultra-Hardcore' },
         ];
 
-        const COMMON_SUBJECTS = ['Matemática', 'Física', 'Química', 'Biologia', 'História', 'Geografia', 'Filosofia', 'Sociologia', 'Português', 'Literatura', 'Redação', 'Inglês'];
-        const STUDY_PRESETS = { ENEM: { subjects: { 1: 'Português, Redação, Literatura', 2: 'Matemática, Física', 3: 'História, Geografia, Sociologia', 4: 'Química, Biologia', 5: 'Filosofia, Inglês, Artes' } } };
-        const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        const COLORS = {
+            "Física": "#3b82f6", "Matemática": "#6366f1", "Química": "#8b5cf6", "Português": "#ec4899",
+            "História": "#f59e0b", "Biologia": "#10b981", "Geografia": "#06b6d4", "Inglês": "#ef4444",
+            "Filosofia": "#eab308", "Sociologia": "#64748b", "Redação": "#f43f5e", 
+            "Revisão": "#14b8a6", "Default": "#64748b"
+        };
 
-        // --- CLASSE PRINCIPAL ---
-        class SchedulerApp {
-            constructor() {
-                // Estado
-                this.currentDate = new Date();
-                this.selectedDate = new Date();
-                this.tasks = JSON.parse(localStorage.getItem('min_calendar_tasks_v8')) || {};
-                this.routineConfig = JSON.parse(localStorage.getItem('min_calendar_routine_v8')) || {
-                    activeDays: [1, 2, 3, 4, 5],
-                    subjects: { 0: '', 1: '', 2: '', 3: '', 4: '', 5: '', 6: '' },
-                    priorities: [],
-                    includeAnki: false,
-                    includeReview: false
-                };
-                this.userProfile = JSON.parse(localStorage.getItem('min_calendar_profile_v8')) || { name: '', course: '' };
-                this.selectedColor = 1;
+        const getColor = (subject) => {
+            if (COLORS[subject]) return COLORS[subject];
+            let hash = 0;
+            for (let i = 0; i < subject.length; i++) hash = subject.charCodeAt(i) + ((hash << 5) - hash);
+            const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+            return '#' + "00000".substring(0, 6 - c.length) + c;
+        };
 
-                this.init();
-            }
+        const formatTime = (mins) => {
+            if (isNaN(mins) || mins < 0) return "0h 00min";
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return `${h}h ${m.toString().padStart(2, '0')}min`;
+        };
 
-            init() {
-                this.renderCalendar();
-                this.renderDayHeader();
-                this.renderTasks();
-                this.renderColorPicker();
-                this.renderRoutineModal();
-                this.loadUserProfile();
-                lucide.createIcons();
-            }
+        const getGreeting = () => {
+            const hour = new Date().getHours();
+            if (hour < 12) return "Bom dia";
+            if (hour < 18) return "Boa tarde";
+            return "Boa noite";
+        };
 
-            save() {
-                localStorage.setItem('min_calendar_tasks_v8', JSON.stringify(this.tasks));
-                localStorage.setItem('min_calendar_routine_v8', JSON.stringify(this.routineConfig));
-            }
+        // --- Components ---
+        
+        const XpToast = ({ xp, visible, onEnd }) => {
+            if (!visible) return null;
+            return (
+                <div className="fixed bottom-32 right-6 z-50 animate-[slideUp_2s_ease-out_forwards] pointer-events-none" onAnimationEnd={onEnd}>
+                    <div className="bg-slate-900 text-white px-4 py-2 rounded-full shadow-2xl font-bold flex items-center gap-2 border-2 border-yellow-400 text-yellow-400">
+                        <span>+{xp} XP</span>
+                        <i data-lucide="star" className="w-4 h-4 fill-yellow-400"></i>
+                    </div>
+                </div>
+            );
+        };
 
-            saveUserProfile() {
-                this.userProfile.name = document.getElementById('user-name-input').value;
-                this.userProfile.course = document.getElementById('user-course-input').value;
-                localStorage.setItem('min_calendar_profile_v8', JSON.stringify(this.userProfile));
-            }
-
-            loadUserProfile() {
-                document.getElementById('user-name-input').value = this.userProfile.name;
-                document.getElementById('user-course-input').value = this.userProfile.course;
-            }
-
-            formatDateKey(date) { return date.toISOString().split('T')[0]; }
-            isSameDay(d1, d2) { return d1.toDateString() === d2.toDateString(); }
-
-            changeMonth(offset) {
-                this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + offset, 1);
-                this.renderCalendar();
-                lucide.createIcons();
-            }
-
-            selectDay(day) {
-                this.selectedDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day);
-                this.renderCalendar();
-                this.renderDayHeader();
-                this.renderTasks();
-                lucide.createIcons();
-            }
-
-            goToToday() {
-                this.selectedDate = new Date();
-                this.currentDate = new Date();
-                this.init();
-            }
-
-            toggleDayOff() {
-                const dateKey = this.formatDateKey(this.selectedDate);
-                // Verifica se já é day off
-                const isOff = this.tasks[dateKey] && this.tasks[dateKey][0] && this.tasks[dateKey][0].id === 'day-off';
-                
-                if (isOff) {
-                    // Remover Day Off (Voltar ao normal vazio)
-                    this.tasks[dateKey] = [];
-                } else {
-                    // Ativar Day Off (Sobrescreve tarefas)
-                    if (confirm('Isso removerá as tarefas de hoje para marcar como descanso. Confirmar?')) {
-                        this.tasks[dateKey] = [{ id: 'day-off', title: 'Day Off', isDayOff: true }];
-                    } else {
-                        return;
-                    }
-                }
-                this.save();
-                this.renderTasks();
-                this.renderCalendar();
-                lucide.createIcons();
-            }
-
-            addTask(e) {
-                e.preventDefault();
-                const input = document.getElementById('new-task-input');
-                const title = input.value.trim();
-                if (!title) return;
-
-                const dateKey = this.formatDateKey(this.selectedDate);
-                
-                // Se era Day Off, limpa antes
-                if (this.tasks[dateKey] && this.tasks[dateKey][0] && this.tasks[dateKey][0].id === 'day-off') {
-                    this.tasks[dateKey] = [];
-                }
-
-                const newTask = { id: Date.now(), title: title, colorIndex: this.selectedColor, completed: false, studiedTime: '' };
-                if (!this.tasks[dateKey]) this.tasks[dateKey] = [];
-                this.tasks[dateKey].push(newTask);
-                
-                input.value = '';
-                this.save();
-                this.renderTasks();
-                this.renderCalendar();
-                lucide.createIcons();
-            }
-
-            toggleTask(id) {
-                const dateKey = this.formatDateKey(this.selectedDate);
-                if (this.tasks[dateKey]) {
-                    this.tasks[dateKey] = this.tasks[dateKey].map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-                    this.save();
-                    this.renderTasks();
-                    lucide.createIcons();
-                }
-            }
-
-            deleteTask(id) {
-                const dateKey = this.formatDateKey(this.selectedDate);
-                if (this.tasks[dateKey]) {
-                    this.tasks[dateKey] = this.tasks[dateKey].filter(t => t.id !== id);
-                    this.save();
-                    this.renderTasks();
-                    this.renderCalendar();
-                    lucide.createIcons();
-                }
-            }
-
-            updateStudiedTime(id, value) {
-                const dateKey = this.formatDateKey(this.selectedDate);
-                if (this.tasks[dateKey]) {
-                    this.tasks[dateKey] = this.tasks[dateKey].map(t => t.id === id ? { ...t, studiedTime: value } : t);
-                    this.save();
-                }
-            }
-
-            selectColor(index) {
-                this.selectedColor = index;
-                this.renderColorPicker();
-            }
-
-            toggleModal(show) {
-                const modal = document.getElementById('routine-modal');
-                modal.classList.toggle('hidden', !show);
-                modal.classList.toggle('flex', show);
-                if(show) this.renderRoutineModal();
-                lucide.createIcons();
-            }
-
-            toggleTutorial(show) {
-                const modal = document.getElementById('tutorial-modal');
-                modal.classList.toggle('hidden', !show);
-                modal.classList.toggle('flex', show);
-                lucide.createIcons();
-            }
-
-            // ... Métodos de Rotina (toggleConfigOption, togglePriority, etc. iguais ao anterior) ...
-            toggleConfigOption(key) { this.routineConfig[key] = !this.routineConfig[key]; this.save(); this.renderRoutineModal(); lucide.createIcons(); }
-            togglePriority(subject) { const idx = this.routineConfig.priorities.indexOf(subject); if(idx>-1)this.routineConfig.priorities.splice(idx,1); else this.routineConfig.priorities.push(subject); this.save(); this.renderRoutineModal(); }
-            toggleRoutineDay(dayIdx) { const idx = this.routineConfig.activeDays.indexOf(dayIdx); if(idx>-1)this.routineConfig.activeDays.splice(idx,1); else this.routineConfig.activeDays.push(dayIdx); this.routineConfig.activeDays.sort(); this.save(); this.renderRoutineModal(); }
-            updateRoutineSubject(dayIdx, value) { this.routineConfig.subjects[dayIdx] = value; this.save(); }
-            applyPreset(key) { this.routineConfig.activeDays = [1,2,3,4,5]; this.routineConfig.subjects = {...this.routineConfig.subjects, ...STUDY_PRESETS[key].subjects}; this.save(); this.renderRoutineModal(); }
-
-            generateSmartDistribution() {
-                const { priorities, activeDays } = this.routineConfig;
-                if (activeDays.length === 0) return alert("Selecione dias da semana.");
-                let pool = [];
-                priorities.forEach(s => { pool.push(s); pool.push(s); });
-                COMMON_SUBJECTS.filter(s => !priorities.includes(s)).forEach(s => pool.push(s));
-                pool.sort(() => Math.random() - 0.5);
-                const buckets = {};
-                activeDays.forEach(d => buckets[d] = []);
-                const canAdd = (day, subj) => !buckets[day].includes(subj) && buckets[day].length < 3;
-                let queue = [...pool];
-                while (queue.length > 0) {
-                    const subj = queue.shift();
-                    const sortedDays = [...activeDays].sort((a,b) => buckets[a].length - buckets[b].length);
-                    for (const day of sortedDays) { if (canAdd(day, subj)) { buckets[day].push(subj); break; } }
-                    if (activeDays.every(d => buckets[d].length >= 3)) break;
-                }
-                activeDays.forEach(d => this.routineConfig.subjects[d] = buckets[d].join(', '));
-                this.save();
-                this.renderRoutineModal();
-            }
-
-            generateMonthSchedule() {
-                const year = this.currentDate.getFullYear();
-                const month = this.currentDate.getMonth();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                let newTasks = { ...this.tasks };
-
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const date = new Date(year, month, day);
-                    const wDay = date.getDay();
-                    const key = this.formatDateKey(date);
-                    // Preserva Day Off se já existir e o usuário não quiser sobrescrever (aqui sobrescrevemos para aplicar nova rotina)
-                    const dayTasks = [];
-
-                    if (this.routineConfig.includeAnki && this.routineConfig.activeDays.includes(wDay)) 
-                        dayTasks.push({ id: Math.random(), title: "Anki / Flashcards", colorIndex: 5, completed: false, studiedTime: '' });
-                    
-                    if (this.routineConfig.includeReview && wDay === 6)
-                        dayTasks.push({ id: Math.random(), title: "Revisão Semanal", colorIndex: 4, completed: false, studiedTime: '' });
-
-                    if (this.routineConfig.activeDays.includes(wDay) && this.routineConfig.subjects[wDay]?.trim()) {
-                        this.routineConfig.subjects[wDay].split(',').filter(s=>s.trim()).forEach((sub, i) => {
-                            dayTasks.push({ id: Math.random(), title: sub.trim(), colorIndex: (i + 1) % 4, completed: false, studiedTime: '' });
-                        });
-                    }
-
-                    if (dayTasks.length > 0) {
-                        const existing = newTasks[key] || [];
-                        // Se for Day Off, não mexe? Ou reseta? Vamos resetar para aplicar a nova rotina.
-                        const existingTitles = new Set(existing.map(t => t.title));
-                        const unique = dayTasks.filter(t => !existingTitles.has(t.title));
-                        let ordered = existing[0]?.id === 'day-off' ? [] : [...existing]; // Remove day-off se gerar nova rotina em cima
-                        
-                        const anki = unique.find(t => t.title.includes("Anki"));
-                        const rev = unique.find(t => t.title.includes("Revisão"));
-                        const others = unique.filter(t => t !== anki && t !== rev);
-                        if (anki) ordered.push(anki);
-                        ordered.push(...others);
-                        if (rev) ordered.push(rev);
-                        newTasks[key] = ordered;
-                    }
-                }
-                this.tasks = newTasks;
-                this.save();
-                this.toggleModal(false);
-                this.renderCalendar();
-                this.renderTasks();
-                lucide.createIcons();
-            }
-
-            // --- RENDERS ---
-            renderCalendar() {
-                document.getElementById('current-month-display').textContent = MONTHS[this.currentDate.getMonth()];
-                document.getElementById('current-year-display').textContent = this.currentDate.getFullYear();
-                const year = this.currentDate.getFullYear();
-                const month = this.currentDate.getMonth();
-                const firstDay = new Date(year, month, 1).getDay();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const grid = document.getElementById('calendar-grid');
-                grid.innerHTML = '';
-                for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
-
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const date = new Date(year, month, day);
-                    const dateKey = this.formatDateKey(date);
-                    const isSelected = this.isSameDay(date, this.selectedDate);
-                    const isToday = this.isSameDay(date, new Date());
-                    
-                    const tasks = this.tasks[dateKey] || [];
-                    const hasTask = tasks.length > 0;
-                    const isDayOff = hasTask && tasks[0].id === 'day-off';
-                    
-                    const wDay = date.getDay();
-                    const isStudyDay = this.routineConfig.activeDays.includes(wDay) || (this.routineConfig.includeReview && wDay === 6);
-
-                    let classes = "w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 relative group ";
-                    if (isSelected) {
-                        classes += "bg-stone-800 text-white shadow-lg shadow-stone-800/30 scale-110";
-                    } else {
-                        classes += "text-stone-500 hover:bg-white hover:shadow-md hover:text-stone-800 ";
-                        if (isToday) classes += "text-indigo-600 font-bold bg-indigo-50 ";
-                        if (isStudyDay && !hasTask) classes += "ring-1 ring-stone-100 bg-white";
-                    }
-
-                    // Dots Logic
-                    let dot = '';
-                    if (isDayOff) dot = `<div class="absolute -bottom-1 w-1 h-1 bg-rose-400 rounded-full"></div>`;
-                    else if (hasTask && !isSelected) dot = `<div class="absolute -bottom-1 w-1 h-1 bg-stone-400 rounded-full"></div>`;
-
-                    const btn = document.createElement('button');
-                    btn.className = classes;
-                    btn.onclick = () => this.selectDay(day);
-                    btn.innerHTML = `${day}${dot}`;
-                    grid.appendChild(btn);
-                }
-            }
-
-            renderDayHeader() {
-                document.getElementById('selected-day-number').textContent = this.selectedDate.getDate().toString().padStart(2, '0');
-                document.getElementById('selected-day-month').textContent = MONTHS[this.selectedDate.getMonth()];
-                document.getElementById('selected-day-weekday').textContent = WEEKDAYS[this.selectedDate.getDay()];
-                document.getElementById('today-btn').classList.toggle('hidden', this.isSameDay(this.selectedDate, new Date()));
-            }
-
-            renderTasks() {
-                const list = document.getElementById('tasks-list');
-                const addContainer = document.getElementById('add-task-container');
-                const dateKey = this.formatDateKey(this.selectedDate);
-                const dayTasks = this.tasks[dateKey] || [];
-                
-                // Verifica Day Off
-                const isDayOff = dayTasks.length > 0 && dayTasks[0].id === 'day-off';
-                
-                // Botão de Day Off Estado Visual
-                const dayOffBtn = document.getElementById('dayoff-btn');
-                if (isDayOff) {
-                    dayOffBtn.classList.replace('bg-rose-50', 'bg-rose-500');
-                    dayOffBtn.classList.replace('text-rose-500', 'text-white');
-                    addContainer.classList.add('hidden'); // Esconde input se for day off
-                } else {
-                    dayOffBtn.classList.replace('bg-rose-500', 'bg-rose-50');
-                    dayOffBtn.classList.replace('text-white', 'text-rose-500');
-                    addContainer.classList.remove('hidden');
-                }
-
-                list.innerHTML = '';
-
-                // Visual Day Off
-                if (isDayOff) {
-                    list.innerHTML = `
-                        <div class="h-full flex flex-col items-center justify-center text-rose-300 select-none pb-20 fade-in">
-                            <div class="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mb-6 shadow-inner animate-pulse">
-                                <i data-lucide="coffee" width="32" class="opacity-40"></i>
-                            </div>
-                            <p class="text-xl font-bold text-rose-400">Day Off</p>
-                            <p class="text-sm text-rose-300/80 mt-2 max-w-[200px] text-center">Recarregue as energias. O descanso também faz parte do processo.</p>
+        const Modal = ({ isOpen, onClose, title, children, className }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out] overflow-hidden">
+                    <div className="absolute inset-0" onClick={onClose}></div>
+                    <div className={`relative bg-white dark:bg-slate-900 w-full md:w-full max-w-md md:max-w-2xl rounded-t-3xl md:rounded-3xl shadow-2xl border-t md:border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh] ${className}`}>
+                        <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                            <h3 className="text-lg md:text-2xl font-display font-bold text-slate-900 dark:text-white truncate pr-4">{title}</h3>
+                            <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500 shrink-0">
+                                <i data-lucide="x" className="w-6 h-6"></i>
+                            </button>
                         </div>
-                    `;
-                    return;
-                }
-
-                // Lista Vazia
-                if (dayTasks.length === 0) {
-                    list.innerHTML = `
-                        <div class="h-full flex flex-col items-center justify-center text-stone-300 select-none pb-20">
-                            <div class="w-24 h-24 bg-stone-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                                <i data-lucide="calendar" width="32" class="opacity-20"></i>
-                            </div>
-                            <p class="text-xl font-light text-stone-400">Dia livre</p>
-                            <p class="text-sm text-stone-300 mt-2">Nenhuma atividade planejada.</p>
+                        <div className="p-6 overflow-y-auto">
+                            {children}
                         </div>
-                    `;
-                    return;
-                }
+                    </div>
+                </div>
+            );
+        };
 
-                // Renderiza Tarefas
-                dayTasks.forEach(task => {
-                    const theme = COLORS[task.colorIndex || 0];
-                    const completedClass = task.completed ? 'bg-stone-50/50 border-stone-100 opacity-60' : 'bg-white border-stone-100 hover:border-stone-200 shadow-[0_2px_15px_-4px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.06)] hover:-translate-y-0.5';
-                    const checkClass = task.completed ? 'bg-stone-800 border-stone-800 text-white scale-90' : 'border-stone-200 text-transparent hover:border-stone-400';
-                    const textClass = task.completed ? 'text-stone-400 line-through decoration-stone-300' : 'text-stone-700';
-                    
-                    const el = document.createElement('div');
-                    el.className = `group relative flex items-center gap-5 p-5 rounded-[1.2rem] border transition-all duration-300 ${completedClass}`;
-                    
-                    el.innerHTML = `
-                        <button onclick="app.toggleTask(${task.id})" class="flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${checkClass}">
-                            <i data-lucide="check" width="14" stroke-width="3"></i>
-                        </button>
-                        <div class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
-                            <p class="font-medium text-lg truncate transition-all ${textClass}">${task.title}</p>
-                            <div class="flex items-center gap-2 ml-auto">
-                                <div class="group/input flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 ${task.completed ? 'bg-transparent border-transparent' : 'bg-stone-50/50 border-stone-100 focus-within:bg-white focus-within:border-stone-300 focus-within:shadow-sm'}">
-                                    <i data-lucide="timer" width="13" class="text-stone-300 group-focus-within/input:text-stone-500"></i>
-                                    <input type="text" placeholder="Tempo" value="${task.studiedTime}" 
-                                        oninput="app.updateStudiedTime(${task.id}, this.value)"
-                                        onclick="event.stopPropagation()"
-                                        class="bg-transparent text-xs font-semibold text-stone-600 placeholder-stone-300 focus:outline-none w-16 text-right">
-                                </div>
-                                <div class="w-2 h-2 rounded-full ${theme.dot}"></div>
-                            </div>
-                        </div>
-                        <button onclick="app.deleteTask(${task.id})" class="absolute right-2 top-2 sm:static opacity-0 group-hover:opacity-100 p-2 text-stone-300 hover:text-rose-400 transition-all hover:bg-rose-50 rounded-lg">
-                            <i data-lucide="trash-2" width="16"></i>
-                        </button>
-                    `;
-                    list.appendChild(el);
-                });
-            }
-
-            renderColorPicker() {
-                const preview = document.getElementById('current-color-preview');
-                const theme = COLORS[this.selectedColor];
-                preview.className = `w-10 h-10 rounded-xl ${theme.bg} border ${theme.border} flex items-center justify-center cursor-pointer transition-transform active:scale-95`;
-                preview.innerHTML = `<div class="w-3 h-3 rounded-full ${theme.dot}"></div>`;
-                const opts = document.getElementById('color-options');
-                opts.innerHTML = '';
-                COLORS.forEach((c, i) => {
-                    const ring = this.selectedColor === i ? `ring-2 ring-offset-1 ring-stone-300` : '';
-                    const div = document.createElement('div');
-                    div.className = `w-6 h-6 rounded-full cursor-pointer ${c.bg} border ${c.border} hover:scale-110 transition-transform ${ring}`;
-                    div.onclick = () => this.selectColor(i);
-                    opts.appendChild(div);
-                });
-            }
-
-            renderRoutineModal() {
-                const methodsContainer = document.getElementById('methods-container');
-                methodsContainer.innerHTML = '';
-                [{ key: 'includeAnki', label: 'Anki Diário', sub: 'Flashcards todo dia', icon: 'layers', color: 'violet' },
-                 { key: 'includeReview', label: 'Revisão Semanal', sub: 'Sábados de revisão', icon: 'repeat', color: 'amber' }
-                ].forEach(m => {
-                    const active = this.routineConfig[m.key];
-                    const activeClass = active ? `bg-${m.color}-50 border-${m.color}-200` : 'bg-white border-stone-100 hover:border-stone-200 hover:shadow-sm';
-                    const iconBg = active ? `bg-${m.color}-500 text-white shadow-md` : 'bg-stone-100 text-stone-400';
-                    const textClass = active ? `text-${m.color}-900` : 'text-stone-700';
-                    const btn = document.createElement('button');
-                    btn.className = `flex items-center gap-4 p-4 rounded-2xl border transition-all text-left group ${activeClass}`;
-                    btn.onclick = () => this.toggleConfigOption(m.key);
-                    btn.innerHTML = `<div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${iconBg}"><i data-lucide="${active ? 'check' : m.icon}" width="16"></i></div><div><span class="font-bold block text-sm ${textClass}">${m.label}</span><span class="text-xs text-stone-400">${m.sub}</span></div>`;
-                    methodsContainer.appendChild(btn);
-                });
-
-                const prioritiesContainer = document.getElementById('priorities-container');
-                prioritiesContainer.innerHTML = '';
-                COMMON_SUBJECTS.forEach(sub => {
-                    const active = this.routineConfig.priorities.includes(sub);
-                    const btn = document.createElement('button');
-                    btn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${active ? 'bg-amber-100 text-amber-800 border-amber-200 shadow-sm' : 'bg-white text-stone-500 border-stone-200 hover:border-amber-200 hover:text-stone-700'}`;
-                    btn.onclick = () => this.togglePriority(sub);
-                    btn.textContent = sub;
-                    prioritiesContainer.appendChild(btn);
-                });
-
-                const weekContainer = document.getElementById('weekly-distribution');
-                weekContainer.innerHTML = '';
-                WEEKDAYS.forEach((dayName, idx) => {
-                    const isActive = this.routineConfig.activeDays.includes(idx);
-                    const containerClass = isActive ? 'border-indigo-100 bg-indigo-50/30' : 'border-stone-100 bg-white opacity-60';
-                    const btnClass = isActive ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-stone-100 text-stone-400 hover:bg-stone-200';
-                    const el = document.createElement('div');
-                    el.className = `group border rounded-2xl p-1 transition-all duration-300 ${containerClass}`;
-                    let contentRight = isActive ? `<input type="text" placeholder="Matérias..." value="${this.routineConfig.subjects[idx] || ''}" onchange="app.updateRoutineSubject(${idx}, this.value)" class="w-full bg-transparent border-b border-transparent focus:border-indigo-200 px-2 py-1 text-sm text-stone-700 placeholder-indigo-200/50 focus:outline-none transition-colors">` : `<div class="text-xs text-stone-300 px-2 cursor-pointer select-none" onclick="app.toggleRoutineDay(${idx})">Dia de descanso</div>`;
-                    el.innerHTML = `<div class="flex items-center gap-3 p-2"><button onclick="app.toggleRoutineDay(${idx})" class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all font-bold text-xs uppercase ${btnClass}">${dayName.substring(0, 3)}</button><div class="flex-1">${contentRight}</div></div>`;
-                    weekContainer.appendChild(el);
-                });
-            }
+        const LevelUpModal = ({ isOpen, onClose, level }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-[fadeIn_0.5s_ease-out]">
+                     <div className="text-center relative bg-white dark:bg-slate-900 p-12 rounded-3xl border-2 border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)] max-w-sm w-full">
+                        <div className="text-6xl mb-4 animate-bounce">🏆</div>
+                        <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">LEVEL UP!</h2>
+                        <p className="text-slate-600 dark:text-slate-300 text-xl font-bold">Você alcançou o Nível {level}</p>
+                        <p className="text-sm text-slate-400 mt-2">Continue estudando para desbloquear mais conquistas!</p>
+                        <button onClick={onClose} className="mt-8 w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-xl font-bold shadow-xl hover:scale-105 transition">CONTINUAR</button>
+                     </div>
+                </div>
+            );
         }
-        const app = new SchedulerApp();
+
+        // --- Daily Mission Widget ---
+        const DailyMissionWidget = ({ minutesStudied, studyLevel, onClaim, claimed }) => {
+            const config = STUDY_LEVELS[studyLevel] || STUDY_LEVELS['Médio'];
+            const target = config.minutes;
+            const progress = Math.min(100, (minutesStudied / target) * 100);
+            const isComplete = minutesStudied >= target;
+            const xpReward = Math.round(100 * config.xpMultiplier);
+
+            return (
+                <div className={`relative overflow-hidden rounded-2xl p-4 border transition-all max-w-md mx-auto mb-8 ${isComplete ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-700' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'} shadow-sm`}>
+                    <div className="flex justify-between items-center relative z-10">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${isComplete ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'}`}>
+                                <i data-lucide="target" className="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Missão Diária ({config.label})</p>
+                                <p className="font-bold text-slate-800 dark:text-white text-sm">Estudar {target} minutos</p>
+                            </div>
+                        </div>
+                        
+                        {isComplete && !claimed ? (
+                            <button onClick={() => onClaim(xpReward)} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg animate-pulse transition transform hover:scale-105">
+                                Resgatar +{xpReward}XP
+                            </button>
+                        ) : (
+                            <span className={`text-xs font-bold font-mono ${isComplete ? 'text-emerald-500' : 'text-slate-500'}`}>
+                                {minutesStudied}/{target} min
+                            </span>
+                        )}
+                    </div>
+                    
+                    {/* Progress Bar BG */}
+                    <div className="absolute bottom-0 left-0 h-1.5 w-full bg-slate-100 dark:bg-slate-900">
+                        <div className={`h-full ${isComplete ? 'bg-gradient-to-r from-indigo-500 to-purple-500 progress-striped' : 'bg-indigo-500'}`} style={{width: `${progress}%`, transition: 'width 1s ease-out'}}></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Flashcard = ({ card, onDelete, onMastered }) => {
+            const [isFlipped, setIsFlipped] = useState(false);
+            return (
+                <div className="relative w-full h-64 perspective-1000 group cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+                     <div className={`w-full h-full duration-500 preserve-3d transition-transform ${isFlipped ? 'rotate-y-180' : ''}`}>
+                         <div className="absolute w-full h-full backface-hidden bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-xl transition flex flex-col justify-between">
+                            <div className="flex justify-between items-start">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded" style={{backgroundColor: getColor(card.subject)}}>{card.subject}</span>
+                                <i data-lucide="help-circle" className="w-5 h-5 text-slate-300"></i>
+                            </div>
+                            <div className="text-center my-auto">
+                                <p className="text-lg font-bold text-slate-800 dark:text-white leading-snug line-clamp-4">{card.question}</p>
+                            </div>
+                            <p className="text-xs text-slate-400 text-center mt-2">Toque para ver a resposta</p>
+                         </div>
+                         <div className="absolute w-full h-full backface-hidden bg-indigo-50 dark:bg-slate-900 rounded-2xl p-6 border-2 border-indigo-500 shadow-xl flex flex-col justify-between rotate-y-180">
+                             <div className="flex justify-between w-full">
+                                 <span className="text-xs font-bold text-indigo-500 uppercase">Correção</span>
+                                 <button onClick={(e) => { e.stopPropagation(); onDelete(card.id); }} className="text-rose-400 hover:text-rose-600 p-1"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
+                             </div>
+                             <div className="text-center overflow-y-auto my-2">
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{card.answer}</p>
+                            </div>
+                            <button onClick={(e) => { e.stopPropagation(); onMastered(card.id); }} className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition">
+                                <i data-lucide="check" className="w-3 h-3"></i> Aprendi! (+XP)
+                            </button>
+                         </div>
+                     </div>
+                </div>
+            )
+        };
+
+        const App = () => {
+            // --- State ---
+            const [schedule, setSchedule] = useState([]);
+            const [essays, setEssays] = useState([]);
+            const [simulados, setSimulados] = useState([]); 
+            const [errorNotes, setErrorNotes] = useState([]); 
+            const [history, setHistory] = useState([]);
+            const [weights, setWeights] = useState({});
+            const [grandTotalHours, setGrandTotalHours] = useState(20);
+            const [isDark, setIsDark] = useState(false);
+            
+            const [userProfile, setUserProfile] = useState({ name: 'Estudante', avatar: '🎓', photo: null, theme: 'indigo', streak: 0, lastStudyDate: null, pomoCompleted: 0, totalMinutesStudied: 0, studyLevel: 'Médio' });
+            const [xp, setXp] = useState(0); 
+            const [achievements, setAchievements] = useState([]);
+            const [xpToast, setXpToast] = useState({ visible: false, amount: 0 });
+            
+            // Mission State
+            const [dailyMissionClaimed, setDailyMissionClaimed] = useState(false);
+            const [lastMissionDate, setLastMissionDate] = useState(null);
+
+            // UI State
+            const [activeModal, setActiveModal] = useState(null);
+            const [selectedTask, setSelectedTask] = useState(null);
+            const [addTaskDayIndex, setAddTaskDayIndex] = useState(null);
+            const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+            const [showHelp, setShowHelp] = useState(false);
+            const [showLevelUp, setShowLevelUp] = useState(false);
+            const [expandedSimuladoGroup, setExpandedSimuladoGroup] = useState(null);
+            
+            // Forms
+            const [newTaskForm, setNewTaskForm] = useState({ subject: '', hours: 1, minutes: 0 });
+            const [essayForm, setEssayForm] = useState({ theme: '', genre: '', grade: '' });
+            const [simuladoForm, setSimuladoForm] = useState({ type: 'subject', subjectName: '', contentTopic: '', examName: '', totalQ: '', correctQ: '', notes: '', triScore: '' }); // Added triScore
+            const [editTaskForm, setEditTaskForm] = useState({ subject: '', plannedH: 0, plannedM: 0, studiedH: 0, studiedM: 0 });
+            const [errorNoteForm, setErrorNoteForm] = useState({ subject: '', title: '', description: '' });
+            const [profileForm, setProfileForm] = useState({ name: '', avatar: '', studyLevel: 'Médio' });
+            
+            // Pomodoro
+            const [pomoTime, setPomoTime] = useState(25 * 60);
+            const [pomoActive, setPomoActive] = useState(false);
+            const [pomoMode, setPomoMode] = useState('focus');
+
+            // --- Init ---
+            useEffect(() => {
+                const init = () => {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    let data = null;
+                    if(saved) { try { data = JSON.parse(saved); } catch(e){} }
+                    
+                    const defaultSchedule = [
+                        { day: "Segunda-feira", tasks: [{ id: 1, subject: "Física", planned: 240, studied: 0 }, { id: 2, subject: "Matemática", planned: 160, studied: 0 }, { id: 3, subject: "Química", planned: 270, studied: 0 }] },
+                        { day: "Terça-feira", tasks: [{ id: 4, subject: "Biologia", planned: 270, studied: 0 }, { id: 5, subject: "Português", planned: 180, studied: 0 }, { id: 6, subject: "História", planned: 180, studied: 0 }] },
+                        { day: "Quarta-feira", tasks: [{ id: 7, subject: "Geografia", planned: 240, studied: 0 }, { id: 8, subject: "Redação", planned: 180, studied: 0 }, { id: 9, subject: "Filosofia", planned: 180, studied: 0 }] },
+                        { day: "Quinta-feira", tasks: [{ id: 10, subject: "Física", planned: 240, studied: 0 }, { id: 11, subject: "Matemática", planned: 160, studied: 0 }, { id: 12, subject: "Biologia", planned: 270, studied: 0 }] },
+                        { day: "Sexta-feira", tasks: [{ id: 13, subject: "Química", planned: 270, studied: 0 }, { id: 14, subject: "Inglês", planned: 60, studied: 0 }, { id: 15, subject: "Sociologia", planned: 60, studied: 0 }] },
+                        { day: "Sábado", tasks: [{ id: 16, subject: "Física", planned: 240, studied: 0 }, { id: 17, subject: "Matemática", planned: 160, studied: 0 }, { id: 18, subject: "Revisão", planned: 120, studied: 0 }] },
+                        { day: "Domingo", tasks: [] }
+                    ];
+
+                    if(data && data.schedule && Array.isArray(data.schedule) && data.schedule.length > 0) {
+                        setSchedule(data.schedule);
+                        setEssays(data.essays || []);
+                        setSimulados(data.simulados || []); 
+                        setErrorNotes(data.errorNotes || []); 
+                        setHistory(data.history || []);
+                        setWeights(data.weights || {});
+                        setXp(data.xp || 0);
+                        setAchievements(data.achievements || []);
+                        setUserProfile(data.userProfile || { name: 'Estudante', avatar: '🎓', photo: null, theme: 'indigo', streak: 0, lastStudyDate: null, pomoCompleted: 0, totalMinutesStudied: 0, studyLevel: 'Médio' });
+                        
+                        const todayStr = new Date().toDateString();
+                        if (data.lastMissionDate !== todayStr) {
+                            setDailyMissionClaimed(false);
+                            setLastMissionDate(todayStr);
+                        } else {
+                            setDailyMissionClaimed(data.dailyMissionClaimed || false);
+                            setLastMissionDate(data.lastMissionDate);
+                        }
+
+                    } else {
+                        setSchedule(defaultSchedule);
+                        const w = {};
+                        defaultSchedule.forEach(d => d.tasks.forEach(t => w[t.subject] = 1));
+                        setWeights(w);
+                    }
+                    if (window.matchMedia('(prefers-color-scheme: dark)').matches) setIsDark(true);
+                };
+                init();
+            }, []);
+
+            useEffect(() => {
+                if(schedule.length > 0) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({ schedule, essays, simulados, errorNotes, history, weights, xp, achievements, userProfile, dailyMissionClaimed, lastMissionDate }));
+                }
+                document.documentElement.classList.toggle('dark', isDark);
+                if(window.lucide) window.lucide.createIcons();
+            }, [schedule, essays, simulados, errorNotes, history, weights, xp, isDark, activeModal, userProfile, achievements, dailyMissionClaimed, lastMissionDate]);
+
+            // --- Logic ---
+            const awardXp = (amount) => { setXp(p => p + amount); setXpToast({ visible: true, amount }); };
+            const getLevel = (p) => Math.floor(Math.sqrt(p / 100)) + 1;
+            
+            const prevLevelRef = useRef(1);
+            useEffect(() => {
+                const cl = getLevel(xp);
+                if (cl > prevLevelRef.current && prevLevelRef.current !== 1) {
+                    confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+                    setShowLevelUp(true);
+                }
+                prevLevelRef.current = cl;
+            }, [xp]);
+
+            // Check Achievements
+            useEffect(() => {
+                let todayMinutes = 0;
+                schedule.forEach(d => d.tasks.forEach(t => todayMinutes += t.studied));
+                const dataToCheck = { essays, simulados, todayMinutes, totalMinutes: userProfile.totalMinutesStudied + todayMinutes, streak: userProfile.streak, level: getLevel(xp), pomoCompleted: userProfile.pomoCompleted, history, xp, errorNotes, studyLevel: userProfile.studyLevel };
+                const newUnlocked = [];
+                ACHIEVEMENTS_LIST.forEach(ach => {
+                    if (!achievements.includes(ach.id)) {
+                        if (ach.req && ach.req(dataToCheck)) newUnlocked.push(ach.id);
+                    }
+                });
+                if (newUnlocked.length > 0) {
+                    setAchievements([...achievements, ...newUnlocked]);
+                    newUnlocked.forEach(id => {
+                        const ach = ACHIEVEMENTS_LIST.find(a => a.id === id);
+                        awardXp(ach.xp);
+                        alert(`🏆 Conquista Desbloqueada: ${ach.title}!`);
+                        confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+                    });
+                }
+            }, [schedule, essays, simulados, xp, userProfile, history, errorNotes]);
+
+            // Pomodoro
+            useEffect(() => {
+                let interval = null;
+                if (pomoActive && pomoTime > 0) {
+                    interval = setInterval(() => setPomoTime(t => t - 1), 1000);
+                } else if (pomoTime === 0) {
+                    setPomoActive(false);
+                    new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play().catch(()=>{});
+                    if(pomoMode === 'focus') {
+                        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                        awardXp(50);
+                        setUserProfile(prev => ({...prev, pomoCompleted: (prev.pomoCompleted || 0) + 1}));
+                        alert("Pomodoro concluído! +50 XP");
+                    }
+                }
+                return () => clearInterval(interval);
+            }, [pomoActive, pomoTime, pomoMode]);
+
+            const togglePomodoro = () => setPomoActive(!pomoActive);
+            const resetPomodoro = (mode = 'focus') => {
+                setPomoActive(false);
+                setPomoMode(mode);
+                setPomoTime(mode === 'focus' ? 25 * 60 : 5 * 60);
+            };
+
+            // --- Handlers ---
+            
+            const handleClaimDailyMission = (xpReward) => {
+                awardXp(xpReward);
+                setDailyMissionClaimed(true);
+                confetti({ particleCount: 100, spread: 60, origin: { y: 0.3 } });
+            };
+
+            const openEditTaskModal = (dayIdx, taskIdx, task) => {
+                setSelectedTask({ ...task, dIdx: dayIdx, tIdx: taskIdx });
+                setEditTaskForm({
+                    subject: task.subject,
+                    plannedH: Math.floor(task.planned / 60),
+                    plannedM: task.planned % 60,
+                    studiedH: Math.floor(task.studied / 60),
+                    studiedM: task.studied % 60
+                });
+                setActiveModal('task');
+            };
+
+            const handleSaveTaskEdit = (e) => {
+                e.preventDefault();
+                const newName = editTaskForm.subject;
+                const planned = (parseInt(editTaskForm.plannedH)||0)*60 + (parseInt(editTaskForm.plannedM)||0);
+                const studied = (parseInt(editTaskForm.studiedH)||0)*60 + (parseInt(editTaskForm.studiedM)||0);
+                const { dIdx, tIdx, subject: oldName } = selectedTask;
+
+                const diff = studied - selectedTask.studied;
+                if(diff > 0) {
+                    awardXp(diff);
+                    setUserProfile(prev => ({...prev, totalMinutesStudied: prev.totalMinutesStudied + diff}));
+                    const today = new Date().toDateString();
+                    if (userProfile.lastStudyDate !== today) {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        if (userProfile.lastStudyDate === yesterday.toDateString()) {
+                            setUserProfile(prev => ({ ...prev, streak: prev.streak + 1, lastStudyDate: today }));
+                        } else {
+                            setUserProfile(prev => ({ ...prev, streak: 1, lastStudyDate: today }));
+                        }
+                    }
+                }
+
+                setSchedule(prev => {
+                    const next = [...prev];
+                    next[dIdx].tasks[tIdx] = { ...next[dIdx].tasks[tIdx], subject: newName, planned, studied };
+                    if(newName !== oldName && confirm(`Renomear todas as ocorrências de "${oldName}" para "${newName}"?`)) {
+                         next.forEach(d => d.tasks.forEach(t => { if(t.subject === oldName) t.subject = newName; }));
+                         setWeights(w => { const nw={...w}; if(nw[oldName]){nw[newName]=nw[oldName]; delete nw[oldName]} else{nw[newName]=1} return nw; });
+                    }
+                    return next;
+                });
+                setActiveModal(null);
+            };
+
+            const handleProfileUpdate = (e) => {
+                e.preventDefault();
+                setUserProfile({ ...userProfile, name: profileForm.name, avatar: profileForm.avatar, studyLevel: profileForm.studyLevel });
+                setActiveModal(null);
+            };
+
+            const handlePhotoUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setUserProfile(prev => ({ ...prev, photo: reader.result }));
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const handleThemeChange = (themeKey) => setUserProfile({...userProfile, theme: themeKey});
+            
+            const deleteTask = (dayIndex, taskId) => {
+                if(confirm("Remover esta matéria do dia?")) {
+                    setSchedule(prev => prev.map((day, idx) => {
+                        if(idx !== dayIndex) return day;
+                        return { ...day, tasks: day.tasks.filter(t => t.id !== taskId) };
+                    }));
+                }
+            };
+
+            const handleAddTask = () => {
+                if(!newTaskForm.subject) return alert("Digite o nome da matéria");
+                const minutes = (parseInt(newTaskForm.hours)||0)*60 + (parseInt(newTaskForm.minutes)||0);
+                setSchedule(prev => prev.map((day, idx) => {
+                    if(idx !== addTaskDayIndex) return day;
+                    return { ...day, tasks: [...day.tasks, { id: Date.now(), subject: newTaskForm.subject, planned: minutes, studied: 0 }] };
+                }));
+                setWeights(prev => ({...prev, [newTaskForm.subject]: prev[newTaskForm.subject] || 1}));
+                setActiveModal(null);
+                setNewTaskForm({subject:'', hours:1, minutes:0});
+            };
+
+            const distributeHours = () => {
+                 const totalMinutes = grandTotalHours * 60;
+                 if(totalMinutes <= 0) return;
+                 let totalPoints = 0;
+                 Object.values(weights).forEach(w => totalPoints += w);
+                 if(totalPoints === 0) totalPoints = 1;
+                 const minsPerPoint = totalMinutes / totalPoints;
+                 const subjectTotals = {};
+                 Object.keys(weights).forEach(s => subjectTotals[s] = weights[s] * minsPerPoint);
+
+                 setSchedule(prev => prev.map(day => ({
+                     ...day,
+                     tasks: day.tasks.map(task => {
+                         let occurrences = 0;
+                         prev.forEach(d => d.tasks.forEach(tk => { if(tk.subject === task.subject) occurrences++; }));
+                         if(occurrences === 0) occurrences = 1;
+                         const subjectTotal = subjectTotals[task.subject] || 0;
+                         return { ...task, planned: Math.floor(subjectTotal / occurrences) };
+                     })
+                 })));
+                 setActiveModal(null);
+                 alert("Horas redistribuídas!");
+            };
+
+            const finishWeek = (note) => {
+                let p = 0, s = 0;
+                schedule.forEach(d => d.tasks.forEach(t => { p += t.planned; s += t.studied; }));
+                const entry = { id: Date.now(), dateISO: new Date().toISOString(), weekRange: "Semana Concluída", note, percent: p > 0 ? Math.round((s/p)*100) : 0, planned: p, studied: s };
+                setHistory([entry, ...history]);
+                setSchedule(prev => prev.map(d => ({ ...d, tasks: d.tasks.map(t => ({ ...t, studied: 0 })) })));
+                setActiveModal('history');
+                confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+                awardXp(200);
+            };
+
+            const handleAddEssay = (e) => {
+                e.preventDefault();
+                if(!essayForm.theme || !essayForm.grade) return alert("Preencha tema e nota");
+                setEssays([{ id: Date.now(), theme: essayForm.theme, genre: essayForm.genre || 'Geral', grade: parseInt(essayForm.grade), date: new Date().toLocaleDateString('pt-BR') }, ...essays]);
+                setEssayForm({theme:'', genre:'', grade:''});
+                setActiveModal(null);
+                awardXp(50);
+            };
+            const deleteEssay = (id) => { if(confirm("Apagar redação?")) setEssays(essays.filter(e => e.id !== id)); };
+
+            const handleAddSimulado = (e) => {
+                e.preventDefault();
+                if(!simuladoForm.totalQ || !simuladoForm.correctQ) return alert("Preencha dados");
+                let title = "", subtitle = "";
+                let tri = null;
+
+                if(simuladoForm.type === 'subject') { 
+                    title = simuladoForm.subjectName; 
+                    subtitle = simuladoForm.contentTopic || "Conteúdo Geral"; 
+                } else { 
+                    title = simuladoForm.examName; 
+                    subtitle = simuladoForm.subjectName || "Prova Completa"; 
+                    if(simuladoForm.triScore) tri = parseFloat(simuladoForm.triScore);
+                }
+
+                const total = parseInt(simuladoForm.totalQ);
+                const correct = parseInt(simuladoForm.correctQ);
+                const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+                setSimulados([{ id: Date.now(), type: simuladoForm.type, title, subtitle, total, correct, percentage, notes: simuladoForm.notes, triScore: tri, date: new Date().toLocaleDateString('pt-BR') }, ...simulados]);
+                setSimuladoForm({ type: 'subject', subjectName: '', contentTopic: '', examName: '', totalQ: '', correctQ: '', notes: '', triScore: '' });
+                setActiveModal(null);
+                awardXp(100);
+                confetti({ particleCount: 50, spread: 60 });
+            };
+
+            const deleteSimulado = (id) => { if(confirm("Apagar simulado?")) setSimulados(simulados.filter(s => s.id !== id)); };
+            const deleteSimuladoGroup = (title) => {
+                if(confirm(`Tem certeza que deseja apagar TODOS os simulados do grupo "${title}"?`)) {
+                    setSimulados(simulados.filter(s => s.title !== title));
+                }
+            };
+
+            const handleAddErrorNote = (e) => {
+                e.preventDefault();
+                if(!errorNoteForm.subject || !errorNoteForm.description) return alert("Preencha todos os campos!");
+                setErrorNotes([{ id: Date.now(), ...errorNoteForm, date: new Date().toLocaleDateString('pt-BR') }, ...errorNotes]);
+                setErrorNoteForm({ subject: '', title: '', description: '' });
+                setActiveModal(null);
+                awardXp(20);
+            };
+            const deleteErrorNote = (id) => { if(confirm("Remover anotação?")) setErrorNotes(errorNotes.filter(c => c.id !== id)); };
+
+            // Drag Helpers
+            const handleDragStart = (e, dIdx, tIdx) => { e.dataTransfer.setData("task", JSON.stringify({ dIdx, tIdx })); e.currentTarget.classList.add('opacity-50'); };
+            const handleDragEnd = (e) => e.target.classList.remove('opacity-50');
+            const handleDragOver = (e) => e.preventDefault();
+            const handleDrop = (e, targetDIdx) => {
+                e.preventDefault();
+                const data = e.dataTransfer.getData("task");
+                if(!data) return;
+                const { dIdx, tIdx } = JSON.parse(data);
+                if(dIdx === targetDIdx) return;
+                setSchedule(prev => {
+                    const next = prev.map(d => ({...d, tasks: [...d.tasks]}));
+                    const [task] = next[dIdx].tasks.splice(tIdx, 1);
+                    next[targetDIdx].tasks.push(task);
+                    return next;
+                });
+            };
+            const getCalendarDays = () => {
+                const y = currentCalendarDate.getFullYear();
+                const m = currentCalendarDate.getMonth();
+                const first = new Date(y, m, 1).getDay();
+                const daysInMonth = new Date(y, m+1, 0).getDate();
+                const days = [];
+                for(let i=0; i<first; i++) days.push(null);
+                for(let i=1; i<=daysInMonth; i++) days.push(i);
+                return days;
+            };
+            const changeMonth = (offset) => setCurrentCalendarDate(new Date(currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset)));
+
+            // --- Render Helpers ---
+            const activeTheme = THEMES[userProfile.theme] || THEMES.indigo;
+            const currentLevel = getLevel(xp);
+            const nextLevelXp = 100 * Math.pow(currentLevel, 2);
+            const prevLevelXp = 100 * Math.pow(currentLevel - 1, 2);
+            const levelProgress = Math.min(100, Math.max(0, ((xp - prevLevelXp) / (nextLevelXp - prevLevelXp)) * 100)) || 0;
+            const timeBank = useMemo(() => { let p=0,s=0; schedule.forEach(d=>d.tasks.forEach(t=>{p+=t.planned;s+=t.studied})); return s-p; }, [schedule]);
+            const pendingSubjects = useMemo(() => {
+                const totals={};
+                schedule.forEach(d=>d.tasks.forEach(t=>{ if(!totals[t.subject])totals[t.subject]={r:0,c:getColor(t.subject)}; totals[t.subject].r+=(t.planned-t.studied); }));
+                return Object.entries(totals).map(([s,v])=>({subject:s,color:v.c,remaining:v.r})).filter(x=>x.remaining>0).sort((a,b)=>b.remaining-a.remaining);
+            }, [schedule]);
+            const essayAvg = essays.length > 0 ? Math.round(essays.reduce((a,b)=>a+b.grade,0)/essays.length) : 0;
+            const simuladoAvg = simulados.length > 0 ? Math.round(simulados.reduce((a,b)=>a+b.percentage,0)/simulados.length) : 0;
+            const groupedSimulados = useMemo(() => {
+                const groups = {};
+                simulados.forEach(sim => {
+                    const key = sim.title;
+                    if(!groups[key]) groups[key] = { title: key, count: 0, totalPercent: 0, items: [] };
+                    groups[key].count++;
+                    groups[key].totalPercent += sim.percentage;
+                    groups[key].items.push(sim);
+                });
+                return Object.values(groups).map(g => ({...g, avg: Math.round(g.totalPercent / g.count)}));
+            }, [simulados]);
+
+            // Daily Mission Calculation
+            let todaysMinutes = 0;
+            schedule.forEach(d => d.tasks.forEach(t => todaysMinutes += t.studied));
+            
+            return (
+                <div className={`container mx-auto px-4 py-8 md:py-12 max-w-7xl pb-32 ${activeTheme.class}`}>
+                    
+                    <LevelUpModal isOpen={showLevelUp} onClose={() => setShowLevelUp(false)} level={currentLevel} />
+                    <XpToast xp={xpToast.amount} visible={xpToast.visible} onEnd={() => setXpToast({ ...xpToast, visible: false })} />
+
+                    {/* Header */}
+                    <header className="text-center mb-10 md:mb-16">
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                             {/* Profile & Level */}
+                             <button onClick={() => { setProfileForm({name: userProfile.name, avatar: userProfile.avatar, studyLevel: userProfile.studyLevel}); setActiveModal('profile'); }} 
+                                className="flex items-center gap-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm px-5 py-2.5 rounded-2xl shadow-sm border border-white/50 dark:border-slate-700/50 w-full md:w-auto justify-center md:justify-start hover:scale-105 transition cursor-pointer group">
+                                 <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 overflow-hidden flex items-center justify-center text-2xl shadow-inner">
+                                     {userProfile.photo ? <img src={userProfile.photo} alt="Avatar" className="w-full h-full object-cover" /> : userProfile.avatar}
+                                 </div>
+                                 <div className="text-left flex-1">
+                                     <div className="flex justify-between items-baseline mb-1 gap-4">
+                                         <span className="text-sm font-bold text-slate-800 dark:text-white">{userProfile.name}</span>
+                                         <span className={`text-[10px] font-bold ${activeTheme.class}`}>{Math.round(xp)} XP</span>
+                                     </div>
+                                     <div className="w-24 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                         <div className={`h-full bg-gradient-to-r ${activeTheme.from} ${activeTheme.to} transition-all duration-500`} style={{width: `${levelProgress}%`}}></div>
+                                     </div>
+                                     <span className="text-[10px] text-slate-400 font-bold mt-1 block">Nível {currentLevel} • {userProfile.studyLevel}</span>
+                                 </div>
+                             </button>
+                             
+                             <div className="flex gap-2 w-full md:w-auto justify-center flex-wrap">
+                                 <button onClick={() => setActiveModal('achievements')} className={`flex-1 md:flex-none justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm border border-slate-200 dark:border-slate-700 hover:border-yellow-400 transition hover:-translate-y-0.5 flex items-center gap-2`}>
+                                    <i data-lucide="medal" className="w-4 h-4 text-yellow-500"></i> <span className="hidden sm:inline">Conquistas</span>
+                                </button>
+                                <button onClick={() => setActiveModal('errors')} className="flex-1 md:flex-none justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm border border-slate-200 hover:border-rose-400 transition flex items-center gap-2">
+                                    <i data-lucide="book-x" className="w-4 h-4 text-rose-500"></i> <span className="hidden sm:inline">Erros</span>
+                                </button>
+                                <button onClick={() => setActiveModal('pomodoro')} className={`flex-1 md:flex-none justify-center ${activeTheme.bg} text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition flex items-center gap-2 transform hover:-translate-y-0.5 opacity-90 hover:opacity-100`}>
+                                    <i data-lucide="timer" className="w-4 h-4"></i> <span className="hidden sm:inline">Foco</span>
+                                </button>
+                                 <button onClick={() => setActiveModal('settings')} className="flex-1 md:flex-none justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 transition hover:-translate-y-0.5 flex items-center gap-2">
+                                    <i data-lucide="sliders-horizontal" className="w-4 h-4 text-indigo-500"></i> <span className="hidden sm:inline">Metas</span>
+                                </button>
+                             </div>
+                        </div>
+
+                        {/* Daily Mission Widget */}
+                        <DailyMissionWidget 
+                            minutesStudied={todaysMinutes}
+                            studyLevel={userProfile.studyLevel}
+                            onClaim={handleClaimDailyMission}
+                            claimed={dailyMissionClaimed}
+                        />
+                        
+                        <h1 className="text-4xl md:text-7xl font-display font-black text-slate-900 dark:text-white mb-2 tracking-tight">
+                             {getGreeting()}, <span className={`text-transparent bg-clip-text bg-gradient-to-r ${activeTheme.from} ${activeTheme.to}`}>{userProfile.name}</span>
+                        </h1>
+                    </header>
+
+                    {/* Time Bank Responsive */}
+                    <div className="glass-card rounded-[2rem] p-6 md:p-8 text-center mb-16 transform hover:scale-[1.01] transition duration-500">
+                        <h2 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Saldo Semanal</h2>
+                        <div className={`text-5xl md:text-7xl font-display font-black tracking-tighter ${timeBank >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {formatTime(Math.abs(timeBank))}
+                            <span className="text-lg md:text-xl ml-2 text-slate-400 font-medium block md:inline">{timeBank >= 0 ? 'EXTRA' : 'FALTA'}</span>
+                        </div>
+                    </div>
+
+                    {/* Schedule Grid Responsive */}
+                    <main className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-8">
+                        {schedule.map((day, dIdx) => (
+                            <div key={dIdx} 
+                                 onDragOver={(e) => e.preventDefault()}
+                                 onDrop={(e) => handleDrop(e, dIdx)}
+                                 className="glass-card rounded-[2rem] p-5 md:p-6 min-h-[250px] flex flex-col transition-colors duration-300">
+                                <div className={`flex justify-between items-center mb-4 pl-2 border-l-4 ${activeTheme.border}`}>
+                                    <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{day.day}</h2>
+                                    <span className={`bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold px-2 py-1 rounded-lg`}>{day.tasks.length}</span>
+                                </div>
+                                
+                                <div className="space-y-3 flex-grow">
+                                    {day.tasks.map((task, tIdx) => {
+                                        const color = getColor(task.subject);
+                                        const isDone = task.planned > 0 && task.studied >= task.planned;
+                                        return (
+                                            <div key={task.id} 
+                                                 draggable onDragStart={(e) => handleDragStart(e, dIdx, tIdx)} onDragEnd={handleDragEnd}
+                                                 onClick={() => openEditTaskModal(dIdx, tIdx, task)}
+                                                 className={`group relative bg-white dark:bg-slate-800/50 p-3 rounded-xl border border-transparent hover:border-indigo-200 dark:hover:border-slate-600 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4 overflow-hidden ${isDone ? 'opacity-75' : ''}`}>
+                                                <div className={`w-1.5 absolute left-0 top-0 bottom-0 rounded-l-xl ${isDone ? 'bg-emerald-500' : ''}`} style={{backgroundColor: isDone ? undefined : color}}></div>
+                                                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm" style={{backgroundColor: color}}>
+                                                    {task.subject.charAt(0)}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-bold text-slate-800 dark:text-slate-100 truncate text-sm md:text-base">{task.subject}</h4>
+                                                    <div className="flex justify-between text-xs text-slate-500 mt-1">
+                                                        <span>Meta: {formatTime(task.planned)}</span>
+                                                        {isDone && <span className="text-emerald-500 font-bold flex items-center gap-1"><i data-lucide="check" className="w-3 h-3"></i> Feito!</span>}
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); deleteTask(dIdx, task.id); }}
+                                                    className="delete-btn p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition md:opacity-0 md:group-hover:opacity-100 z-10"
+                                                >
+                                                    <i data-lucide="trash-2" className="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                    {day.tasks.length === 0 && <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 text-xs font-bold uppercase tracking-widest opacity-50">Vazio</div>}
+                                </div>
+                                <button onClick={() => { setAddTaskDayIndex(dIdx); setActiveModal('add_task'); }} className={`mt-4 w-full py-3 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 hover:text-indigo-500 font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition flex items-center justify-center gap-2`}>
+                                    <i data-lucide="plus" className="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        ))}
+                    </main>
+
+                    {/* Pendências & Redações */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+                        {/* Pendências */}
+                        <div className="glass-card rounded-[2rem] p-6 md:p-8 border-t-4 border-rose-500 h-fit">
+                             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200/60 dark:border-slate-700/60">
+                                <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">Pendências</h2>
+                                <span className="text-[10px] md:text-xs font-bold bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 px-3 py-1 rounded-full uppercase tracking-widest">Atenção</span>
+                            </div>
+                            <div className="space-y-3">
+                                {pendingSubjects.length === 0 ? <div className="text-center text-emerald-500 font-bold py-8 flex flex-col items-center gap-2"><i data-lucide="party-popper" className="w-8 h-8"></i>Parabéns! Tudo completo.</div> : pendingSubjects.map((item, i) => (
+                                    <div key={i} className="flex justify-between items-center p-4 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-1.5 h-8 rounded-full" style={{backgroundColor: item.color}}></div>
+                                            <h4 className="font-bold text-slate-700 dark:text-white text-sm md:text-base">{item.subject}</h4>
+                                        </div>
+                                        <span className={`font-black ${activeTheme.class}`}>{formatTime(item.remaining)}</span>
+                                    </div>
+                                ))}
+                             </div>
+                        </div>
+
+                        {/* Redações */}
+                        <div className={`glass-card rounded-[2rem] p-6 md:p-8 border-t-4 ${activeTheme.border} h-fit`}>
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h3 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">Redações</h3>
+                                    <span className={`text-xs font-bold block mt-1 ${activeTheme.class}`}>Média: {essayAvg}</span>
+                                </div>
+                                <button onClick={() => setActiveModal('essay')} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-xl font-bold text-xs shadow-lg hover:scale-105 transition flex items-center gap-2">
+                                    <i data-lucide="pen-tool" className="w-3 h-3"></i> Nova
+                                </button>
+                            </div>
+                            <div className="space-y-3">
+                                {essays.length === 0 && <p className="text-slate-400 text-center py-6 italic">Nenhuma redação registrada.</p>}
+                                {essays.map(essay => (
+                                    <div key={essay.id} className="flex justify-between items-center p-4 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-indigo-200 transition group">
+                                        <div className="min-w-0 mr-2">
+                                            <h4 className="font-bold text-slate-800 dark:text-white truncate text-sm md:text-base">{essay.theme}</h4>
+                                            <p className="text-xs text-slate-400">{essay.genre}</p>
+                                        </div>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            <span className={`text-lg font-black ${essay.grade >= 900 ? 'text-emerald-500' : 'text-indigo-600'}`}>{essay.grade}</span>
+                                            <button onClick={() => deleteEssay(essay.id)} className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition"><i data-lucide="trash-2" className="w-3 h-3"></i></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                     {/* Simulados (AGRUPADOS) */}
+                     <div className="glass-card rounded-[2rem] p-6 md:p-8 mt-12 border-t-4 border-purple-500 h-fit">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">Simulados</h3>
+                                <span className="text-xs text-purple-500 font-bold block mt-1">Média Geral: {simuladoAvg}%</span>
+                            </div>
+                            <button onClick={() => setActiveModal('simulado')} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-xl font-bold text-xs shadow-lg hover:scale-105 transition flex items-center gap-2">
+                                <i data-lucide="clipboard-list" className="w-3 h-3"></i> Novo
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            {simulados.length === 0 && <p className="text-slate-400 text-center py-6 italic">Nenhum simulado registrado.</p>}
+                            
+                            {groupedSimulados.map(group => (
+                                <div key={group.title} className="bg-white dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
+                                    <div 
+                                        onClick={() => setExpandedSimuladoGroup(expandedSimuladoGroup === group.title ? null : group.title)}
+                                        className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg text-purple-600 dark:text-purple-400 font-bold text-sm">
+                                                {group.count}
+                                            </div>
+                                            <h4 className="font-bold text-slate-800 dark:text-white text-lg">{group.title}</h4>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right hidden sm:block">
+                                                <span className="text-xs text-slate-400 uppercase font-bold block">Média</span>
+                                                <span className={`font-bold ${group.avg >= 80 ? 'text-emerald-500' : 'text-slate-700 dark:text-slate-300'}`}>{group.avg}%</span>
+                                            </div>
+                                            
+                                            {/* Group Delete Button */}
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); deleteSimuladoGroup(group.title); }}
+                                                className="p-2 text-slate-300 hover:text-rose-500 transition"
+                                                title="Apagar Grupo"
+                                            >
+                                                <i data-lucide="trash-2" className="w-4 h-4"></i>
+                                            </button>
+
+                                            <i data-lucide="chevron-down" className={`w-5 h-5 text-slate-400 transition-transform ${expandedSimuladoGroup === group.title ? 'rotate-180' : ''}`}></i>
+                                        </div>
+                                    </div>
+                                    
+                                    {expandedSimuladoGroup === group.title && (
+                                        <div className="border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 p-4 space-y-3 animate-fade-in">
+                                            {group.items.map(sim => (
+                                                <div key={sim.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                                                    <div>
+                                                        <p className="text-xs text-slate-400 mb-0.5">{sim.date} • {sim.type === 'exam' ? 'Prova' : 'Matéria'}</p>
+                                                        <p className="font-bold text-slate-700 dark:text-slate-200">{sim.subtitle}</p>
+                                                        {sim.type === 'exam' && sim.triScore && <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded">TRI: {sim.triScore}</span>}
+                                                        {sim.notes && <p className="text-xs text-slate-500 italic mt-1">"{sim.notes}"</p>}
+                                                    </div>
+                                                    <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+                                                        <div className="text-right">
+                                                             <span className={`text-lg font-black ${sim.percentage >= 80 ? 'text-emerald-500' : 'text-purple-500'}`}>{sim.percentage}%</span>
+                                                             <p className="text-[10px] text-slate-400 uppercase">{sim.correct}/{sim.total}</p>
+                                                        </div>
+                                                        <button onClick={() => deleteSimulado(sim.id)} className="text-slate-300 hover:text-rose-500"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Hero Footer Button - STATIC POSITION */}
+                    <div className="flex justify-center mt-24 mb-12">
+                        <button onClick={() => setActiveModal('finish')} className="group relative inline-flex items-center justify-center px-12 py-6 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full shadow-2xl hover:shadow-emerald-500/40 hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto max-w-md">
+                            <span className="text-lg font-black text-white tracking-wide mr-2">CONCLUIR SEMANA</span>
+                            <i data-lucide="check-circle-2" className="w-8 h-8 text-white/80 animate-bounce"></i>
+                        </button>
+                    </div>
+
+                    {/* --- MODALS --- */}
+
+                     {/* Profile Modal */}
+                     <Modal isOpen={activeModal === 'profile'} onClose={() => setActiveModal(null)} title="Perfil do Estudante">
+                        <form onSubmit={handleProfileUpdate} className="space-y-6">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Seu Nome</label>
+                                <input value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold" />
+                            </div>
+                             <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Avatar (Emoji)</label>
+                                <input value={profileForm.avatar} onChange={e => setProfileForm({...profileForm, avatar: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-center text-2xl" maxLength="2" />
+                            </div>
+                             <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Nível de Estudo</label>
+                                <div className="flex flex-wrap gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                    {Object.keys(STUDY_LEVELS).map(lvl => (
+                                        <button 
+                                            type="button"
+                                            key={lvl}
+                                            onClick={() => setProfileForm({...profileForm, studyLevel: lvl})}
+                                            className={`flex-1 py-2 px-2 rounded-lg text-[10px] font-bold transition ${profileForm.studyLevel === lvl ? 'bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-white' : 'text-slate-500'}`}
+                                        >
+                                            {STUDY_LEVELS[lvl].icon} {lvl}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-slate-400 mt-2 text-center">
+                                    Meta Diária: {STUDY_LEVELS[profileForm.studyLevel]?.minutes} min • XP: x{STUDY_LEVELS[profileForm.studyLevel]?.xpMultiplier}
+                                </p>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Foto de Perfil (Opcional)</label>
+                                <input type="file" accept="image/*" onChange={handlePhotoUpload} className="w-full p-2 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-3 uppercase">Tema de Cores</label>
+                                <div className="flex gap-3 justify-center flex-wrap">
+                                    {Object.entries(THEMES).map(([key, theme]) => (
+                                        <button key={key} type="button" onClick={() => handleThemeChange(key)} className={`w-10 h-10 rounded-full ${theme.bg} border-2 ${userProfile.theme === key ? 'border-white ring-2 ring-slate-300' : 'border-transparent'} transition transform hover:scale-110`}></button>
+                                    ))}
+                                </div>
+                            </div>
+                            <button type="submit" className={`w-full py-3 rounded-xl font-bold text-white ${activeTheme.bg} shadow-lg`}>Salvar Perfil</button>
+                        </form>
+                    </Modal>
+
+                    {/* Achievements Modal */}
+                    <Modal isOpen={activeModal === 'achievements'} onClose={() => setActiveModal(null)} title="Galeria de Conquistas" className="max-w-3xl">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {ACHIEVEMENTS_LIST.map(ach => {
+                                const isUnlocked = achievements.includes(ach.id);
+                                return (
+                                    <div key={ach.id} className={`relative overflow-hidden p-5 rounded-2xl border transition-all duration-300 achievement-card ${isUnlocked ? 'bg-white dark:bg-slate-800 border-transparent shadow-lg scale-[1.02]' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 achievement-locked'}`}>
+                                        {isUnlocked && <div className={`absolute inset-0 opacity-10 bg-gradient-to-br ${ach.gradient.replace('linear-gradient(135deg, ', '').replace(')', '')}`}></div>}
+                                        <div className="relative z-10 flex items-start gap-4">
+                                            <div className={`p-3 rounded-xl shadow-inner text-white`} style={{background: ach.gradient}}>
+                                                <i data-lucide={ach.icon} className="w-6 h-6"></i>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-slate-800 dark:text-white text-base mb-1">{ach.title}</h4>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-2">{ach.desc}</p>
+                                                <span className={`text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider ${isUnlocked ? 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' : 'bg-slate-200 text-slate-400'}`}>{ach.xp} XP</span>
+                                            </div>
+                                        </div>
+                                        {isUnlocked && <div className="absolute top-2 right-2 text-emerald-500"><i data-lucide="check-circle" className="w-4 h-4"></i></div>}
+                                    </div>
+                                );
+                            })}
+                         </div>
+                    </Modal>
+
+                    {/* Error Notebook Modal */}
+                    <Modal isOpen={activeModal === 'errors'} onClose={() => setActiveModal(null)} title="Caderno de Erros" className="max-w-4xl">
+                         <div className="flex flex-col md:flex-row gap-8 h-[65vh]">
+                             <div className="w-full md:w-1/3 bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl h-fit border border-slate-100 dark:border-slate-700">
+                                <h4 className="font-bold text-slate-700 dark:text-white mb-3 text-sm uppercase">Novo Registro</h4>
+                                <form onSubmit={handleAddErrorNote} className="space-y-3">
+                                    <input placeholder="Matéria (ex: Matemática)" value={errorNoteForm.subject} onChange={e => setErrorNoteForm({...errorNoteForm, subject: e.target.value})} className="w-full p-2.5 bg-white dark:bg-slate-900 rounded-lg text-sm border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 ring-indigo-500" />
+                                    <input placeholder="Assunto/Título" value={errorNoteForm.title} onChange={e => setErrorNoteForm({...errorNoteForm, title: e.target.value})} className="w-full p-2.5 bg-white dark:bg-slate-900 rounded-lg text-sm border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 ring-indigo-500" />
+                                    <textarea placeholder="O que eu errei? O que aprendi?" value={errorNoteForm.description} onChange={e => setErrorNoteForm({...errorNoteForm, description: e.target.value})} className="w-full p-2.5 bg-white dark:bg-slate-900 rounded-lg text-sm border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 ring-indigo-500 h-32 resize-none"></textarea>
+                                    <button type="submit" className={`w-full py-2.5 ${activeTheme.bg} text-white rounded-lg font-bold shadow-md hover:opacity-90`}>Adicionar Nota</button>
+                                </form>
+                             </div>
+                             <div className="w-full md:w-2/3 overflow-y-auto p-1">
+                                {errorNotes.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-50"><i data-lucide="book-open" className="w-12 h-12 mb-2"></i><p>Caderno vazio.</p></div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {errorNotes.map(note => (
+                                            <div key={note.id} className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm relative group hover:border-indigo-200 transition">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <span className="text-[10px] font-bold uppercase text-white px-2 py-1 rounded mb-1 inline-block" style={{backgroundColor: getColor(note.subject)}}>{note.subject}</span>
+                                                        <h4 className="font-bold text-slate-800 dark:text-white text-base">{note.title}</h4>
+                                                    </div>
+                                                    <span className="text-[10px] text-slate-400">{note.date}</span>
+                                                </div>
+                                                <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{note.description}</p>
+                                                <button onClick={() => deleteErrorNote(note.id)} className="absolute top-4 right-4 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                             </div>
+                         </div>
+                    </Modal>
+
+                    {/* Edit Task Modal */}
+                    <Modal isOpen={activeModal === 'task'} onClose={() => setActiveModal(null)} title="Editar Matéria">
+                        {selectedTask && (
+                            <form onSubmit={handleSaveTaskEdit} className="space-y-6">
+                                <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-2xl text-center">
+                                    <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Nome da Matéria</label>
+                                    <input name="subject" defaultValue={selectedTask.subject} className={`w-full bg-transparent text-center text-3xl font-black ${activeTheme.class} outline-none border-b-2 border-transparent hover:border-indigo-300 focus:border-indigo-500 transition`} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="font-bold text-slate-500 mb-2 block">Planejado</label>
+                                        <div className="flex gap-2">
+                                            <input type="number" value={editTaskForm.plannedH} onChange={e => setEditTaskForm({...editTaskForm, plannedH: e.target.value})} className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold outline-none" placeholder="H" />
+                                            <input type="number" value={editTaskForm.plannedM} onChange={e => setEditTaskForm({...editTaskForm, plannedM: e.target.value})} className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold outline-none" placeholder="M" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="font-bold text-slate-500 mb-2 block">Estudado</label>
+                                        <div className="flex gap-2">
+                                            <input type="number" value={editTaskForm.studiedH} onChange={e => setEditTaskForm({...editTaskForm, studiedH: e.target.value})} className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold outline-none" placeholder="H" />
+                                            <input type="number" value={editTaskForm.studiedM} onChange={e => setEditTaskForm({...editTaskForm, studiedM: e.target.value})} className="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold outline-none" placeholder="M" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" className={`w-full py-4 ${activeTheme.bg} text-white rounded-xl font-bold shadow-lg transition hover:scale-[1.02]`}>Salvar Alterações</button>
+                            </form>
+                        )}
+                    </Modal>
+
+                    {/* Add Task */}
+                    <Modal isOpen={activeModal === 'add_task'} onClose={() => setActiveModal(null)} title="Adicionar Matéria">
+                        <div className="space-y-6">
+                            <div>
+                                <label className="font-bold text-slate-500 mb-2 block">Nome da Matéria</label>
+                                <input 
+                                    value={newTaskForm.subject} onChange={e => setNewTaskForm({...newTaskForm, subject: e.target.value})}
+                                    className="w-full p-4 text-lg font-bold bg-slate-50 dark:bg-slate-800 rounded-xl outline-none border border-slate-200 dark:border-slate-700 focus:border-indigo-500" 
+                                    placeholder="Ex: Programação, Yoga..." 
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex items-center gap-2">
+                                    <input type="number" min="0" value={newTaskForm.hours} onChange={e => setNewTaskForm({...newTaskForm, hours: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 font-bold outline-none" /><span className="font-bold">H</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input type="number" min="0" max="59" value={newTaskForm.minutes} onChange={e => setNewTaskForm({...newTaskForm, minutes: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 font-bold outline-none" /><span className="font-bold">Min</span>
+                                </div>
+                            </div>
+                            <button onClick={handleAddTask} className={`w-full py-4 ${activeTheme.bg} text-white rounded-xl font-bold shadow-lg hover:opacity-90`}>Adicionar ao Dia</button>
+                        </div>
+                    </Modal>
+
+                    {/* Settings (Weights) */}
+                    <Modal isOpen={activeModal === 'settings'} onClose={() => setActiveModal(null)} title="Configurar Pesos">
+                        <div className="p-6 mb-6 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 flex justify-between items-center">
+                            <div>
+                                <label className="block text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase mb-1">Meta Semanal (Horas)</label>
+                                <input type="number" value={grandTotalHours} onChange={e => setGrandTotalHours(parseInt(e.target.value)||0)} className={`text-3xl font-black bg-transparent ${activeTheme.class} outline-none w-32 border-b-2 border-indigo-300`} />
+                            </div>
+                            <button onClick={distributeHours} className={`${activeTheme.bg} text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition`}>Calcular e Distribuir</button>
+                        </div>
+                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                            {Object.keys(weights).sort().map(s => (
+                                <div key={s} className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-3 h-3 rounded-full" style={{backgroundColor: getColor(s)}}></div>
+                                        <span className="font-bold text-slate-700 dark:text-white">{s}</span>
+                                    </div>
+                                    <div className="flex items-center bg-white dark:bg-slate-900 rounded-lg p-1 shadow-sm">
+                                        <button onClick={() => setWeights({...weights, [s]: Math.max(1, weights[s]-1)})} className="w-8 h-8 font-bold text-slate-400 hover:text-indigo-500">-</button>
+                                        <span className="w-8 text-center font-bold dark:text-white">{weights[s]}</span>
+                                        <button onClick={() => setWeights({...weights, [s]: Math.min(5, weights[s]+1)})} className="w-8 h-8 font-bold text-slate-400 hover:text-indigo-500">+</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Modal>
+
+                    {/* Essay Modal */}
+                    <Modal isOpen={activeModal === 'essay'} onClose={() => setActiveModal(null)} title="Nova Redação">
+                        <form onSubmit={handleAddEssay} className="space-y-5">
+                            <input 
+                                value={essayForm.theme} onChange={e => setEssayForm({...essayForm, theme: e.target.value})}
+                                className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium outline-none focus:ring-2 ring-indigo-500" placeholder="Tema da redação" 
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <input 
+                                    value={essayForm.genre} onChange={e => setEssayForm({...essayForm, genre: e.target.value})}
+                                    className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium outline-none focus:ring-2 ring-indigo-500" placeholder="Gênero" 
+                                />
+                                <input 
+                                    type="number" max="1000" value={essayForm.grade} onChange={e => setEssayForm({...essayForm, grade: e.target.value})}
+                                    className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium outline-none focus:ring-2 ring-indigo-500" placeholder="Nota (0-1000)" 
+                                />
+                            </div>
+                            <button type="submit" className={`w-full py-4 ${activeTheme.bg} text-white rounded-xl font-bold shadow-lg hover:opacity-90`}>Adicionar</button>
+                        </form>
+                    </Modal>
+
+                    {/* Simulado Modal */}
+                    <Modal isOpen={activeModal === 'simulado'} onClose={() => setActiveModal(null)} title="Novo Simulado">
+                        <div className="space-y-6">
+                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                <button onClick={() => setSimuladoForm({...simuladoForm, type: 'subject'})} className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${simuladoForm.type === 'subject' ? 'bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-white' : 'text-slate-500'}`}>Matéria Específica</button>
+                                <button onClick={() => setSimuladoForm({...simuladoForm, type: 'exam'})} className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${simuladoForm.type === 'exam' ? 'bg-white dark:bg-slate-700 shadow text-purple-600 dark:text-white' : 'text-slate-500'}`}>Prova Completa</button>
+                            </div>
+                            <form onSubmit={handleAddSimulado} className="space-y-5">
+                                {simuladoForm.type === 'subject' ? (
+                                    <>
+                                        <input value={simuladoForm.subjectName} onChange={e => setSimuladoForm({...simuladoForm, subjectName: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium outline-none focus:ring-2 ring-indigo-500" placeholder="Nome da Matéria (Ex: Física)" />
+                                        <input value={simuladoForm.contentTopic} onChange={e => setSimuladoForm({...simuladoForm, contentTopic: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium outline-none focus:ring-2 ring-indigo-500" placeholder="Conteúdo (Ex: Cinemática)" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <input value={simuladoForm.examName} onChange={e => setSimuladoForm({...simuladoForm, examName: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium outline-none focus:ring-2 ring-purple-500" placeholder="Nome da Prova (Ex: ENEM 2023)" />
+                                        <input value={simuladoForm.subjectName} onChange={e => setSimuladoForm({...simuladoForm, subjectName: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium outline-none focus:ring-2 ring-purple-500" placeholder="Área/Matéria (Ex: Natureza)" />
+                                        <input value={simuladoForm.triScore} onChange={e => setSimuladoForm({...simuladoForm, triScore: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium outline-none focus:ring-2 ring-purple-500" placeholder="Nota TRI (Opcional)" type="number" step="0.1" />
+                                    </>
+                                )}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1">Total Questões</label><input type="number" min="1" value={simuladoForm.totalQ} onChange={e => setSimuladoForm({...simuladoForm, totalQ: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl font-bold outline-none focus:ring-2 ring-indigo-500"/></div>
+                                    <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1">Acertos</label><input type="number" min="0" value={simuladoForm.correctQ} onChange={e => setSimuladoForm({...simuladoForm, correctQ: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl font-bold outline-none focus:ring-2 ring-indigo-500"/></div>
+                                </div>
+                                <div><label className="block text-xs font-bold text-slate-400 uppercase mb-1">Análise de Erros</label><textarea value={simuladoForm.notes} onChange={e => setSimuladoForm({...simuladoForm, notes: e.target.value})} className="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl font-medium outline-none focus:ring-2 ring-indigo-500 h-24 resize-none" placeholder="O que errei?"></textarea></div>
+                                <button type="submit" className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition">Salvar Simulado</button>
+                            </form>
+                        </div>
+                    </Modal>
+
+                    {/* 7. History Modal */}
+                     <Modal isOpen={activeModal === 'history'} onClose={() => setActiveModal(null)} title="Histórico">
+                        <div className="flex flex-col md:flex-row gap-8">
+                            <div className="w-full md:w-1/2">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold dark:text-white">Calendário</h3>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setCurrentCalendarDate(new Date(currentCalendarDate.setMonth(currentCalendarDate.getMonth()-1)))} className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white">←</button>
+                                        <span className="font-bold dark:text-white min-w-[100px] text-center">{currentCalendarDate.toLocaleDateString('pt-BR', {month:'long'})}</span>
+                                        <button onClick={() => setCurrentCalendarDate(new Date(currentCalendarDate.setMonth(currentCalendarDate.getMonth()+1)))} className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white">→</button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-7 gap-2">
+                                    {getCalendarDays().map((d, i) => {
+                                        if(!d) return <div key={i} className="calendar-day empty"></div>;
+                                        const dateCheck = `${currentCalendarDate.getFullYear()}-${String(currentCalendarDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                                        const hasEntry = history.some(h => h.dateISO.startsWith(dateCheck));
+                                        return <div key={i} className={`calendar-day text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 ${hasEntry ? `has-history text-white ${activeTheme.bg}` : ''}`}>{d}</div>;
+                                    })}
+                                </div>
+                            </div>
+                            <div className="w-full md:w-1/2 border-l border-slate-100 dark:border-slate-700 pl-8">
+                                <h3 className="text-xl font-bold dark:text-white mb-4">Registros</h3>
+                                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                                    {history.length === 0 && <p className="text-slate-400">Sem histórico.</p>}
+                                    {history.map(h => (
+                                        <div key={h.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                            <div className="flex justify-between mb-1">
+                                                <span className="font-bold dark:text-white">{new Date(h.dateISO).toLocaleDateString()}</span>
+                                                <span className="font-bold text-indigo-500">{h.percent}%</span>
+                                            </div>
+                                            <p className="text-sm text-slate-500 italic">"{h.note || 'Sem nota'}"</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </Modal>
+
+                    {/* Toggle Theme & Help */}
+                    <button onClick={() => setIsDark(!isDark)} className="fixed top-6 right-6 z-40 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-all">
+                        {isDark ? <i data-lucide="sun" className="w-6 h-6"></i> : <i data-lucide="moon" className="w-6 h-6"></i>}
+                    </button>
+
+                    <button onClick={() => setShowHelp(!showHelp)} className="fixed bottom-6 right-6 z-40 p-4 rounded-full bg-indigo-600 shadow-xl text-white hover:bg-indigo-700 transition-colors">
+                        <i data-lucide="help-circle" className="w-6 h-6"></i>
+                    </button>
+
+                    <div className={`fixed bottom-24 right-6 z-30 max-w-xs bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-700 transition-all duration-300 ${showHelp ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
+                        <h4 className="font-bold mb-2 dark:text-white">Ajuda Rápida</h4>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                            <b>Renomear Matéria:</b> Clique em qualquer matéria na semana e edite o nome no topo do cartão.<br/><br/>
+                            Use o botão <b>Configurar Metas</b> para ajustar pesos (1-5).
+                        </p>
+                    </div>
+
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
